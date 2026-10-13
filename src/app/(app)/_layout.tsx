@@ -1,11 +1,10 @@
 import { useEffect } from 'react';
-import * as Notifications from 'expo-notifications';
 import { Stack, router } from 'expo-router';
 import { useAuth } from '@/state/auth';
 import { useFamily } from '@/state/family';
 import { useRealtime } from '@/state/realtime';
 import { getPendingInvite } from '@/lib/pendingInvite';
-import { registerForPush } from '@/lib/push';
+import { onNotificationTap, registerForPush } from '@/lib/push';
 import { colors, fonts } from '@/ui/theme';
 
 export default function AppLayout() {
@@ -19,13 +18,11 @@ export default function AppLayout() {
     // Push is optional; the in-app notification centre works without it.
     registerForPush().catch(() => {});
     // Tapping a push notification opens the right screen.
-    const sub = Notifications.addNotificationResponseReceivedListener((r) => {
-      const d = r.notification.request.content.data as { taskId?: string; conversationId?: string } | undefined;
-      if (d?.conversationId) router.push(`/chat/${d.conversationId}`);
-      else if (d?.taskId) router.push(`/task/${d.taskId}`);
+    return onNotificationTap((d) => {
+      if (d.conversationId) router.push(`/chat/${d.conversationId}`);
+      else if (d.taskId) router.push(`/task/${d.taskId}`);
       else router.push('/notifications');
     });
-    return () => sub.remove();
   }, []);
 
   return (
