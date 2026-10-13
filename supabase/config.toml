@@ -1,0 +1,12 @@
+# Supabase CLI settings for Robin (used by `supabase db push` / `supabase functions deploy`).
+project_id = "robin"
+
+[functions.delete-account]
+verify_jwt = true
+
+# Called by a database webhook / schedule with the x-robin-secret header instead of a user token.
+[functions.send-push]
+verify_jwt = false
+
+[functions.cleanup-media]
+verify_jwt = false
