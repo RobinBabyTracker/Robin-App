@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Share, Text, View } from 'react-native';
+import { AccessibilityInfo, Share, Text, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { useQueryClient } from '@tanstack/react-query';
 import { Banner, Button, Caption, Card, ChoiceChip, EmptyState, Heading, Robin, Screen, Stack, Strong, TextField, Voice } from '@/ui/components';
@@ -61,6 +61,7 @@ export default function Invite() {
     if (!invite) return;
     await Clipboard.setStringAsync(invite.code);
     setCopied(true);
+    AccessibilityInfo.announceForAccessibility('Code copied');
   };
 
   if (invite) {
@@ -102,12 +103,12 @@ export default function Invite() {
           <Stack gap={space.lg}>
             <Strong>They'll join as</Strong>
             <View style={{ gap: space.sm }}>
-              <ChoiceChip label="Helper: replies to requests, chats, sees memories" selected={role === 'helper'} onPress={() => setRole('helper')} />
-              <ChoiceChip label="Parent: can also ask for help and invite" selected={role === 'parent'} onPress={() => setRole('parent')} />
+              <ChoiceChip single label="Helper: replies to requests, chats, sees memories" selected={role === 'helper'} onPress={() => setRole('helper')} />
+              <ChoiceChip single label="Parent: can also ask for help and invite" selected={role === 'parent'} onPress={() => setRole('parent')} />
             </View>
             <Strong>Code runs out after</Strong>
             <View style={{ flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' }}>
-              {EXPIRY.map((e) => <ChoiceChip key={e.hours} label={e.label} selected={hours === e.hours} onPress={() => setHours(e.hours)} />)}
+              {EXPIRY.map((e) => <ChoiceChip single key={e.hours} label={e.label} selected={hours === e.hours} onPress={() => setHours(e.hours)} />)}
             </View>
             <TextField label="Who's it for? (optional, just for you)" value={note} onChangeText={setNote} maxLength={80} placeholder="Nana" />
           </Stack>

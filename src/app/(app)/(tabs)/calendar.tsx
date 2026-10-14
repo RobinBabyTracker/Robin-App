@@ -57,6 +57,7 @@ export default function CalendarScreen() {
     }
   };
 
+  const isToday = selected.year === today.year && selected.month === today.month && selected.day === today.day;
   const goToday = () => { setSelected(today); setMonthCursor({ year: today.year, month: today.month }); };
 
   return (
@@ -64,14 +65,8 @@ export default function CalendarScreen() {
       <AppHeader title="Calendar" />
       <Screen refreshControl={<RefreshControl refreshing={cal.isRefetching} onRefresh={() => cal.refetch()} />}>
         <Stack gap={space.md}>
-          <View style={{ flexDirection: 'row', gap: space.sm }}>
-            <View style={{ flex: 1 }}>
-              <Segmented label="Whose plans to show" value={scope} onChange={setScope} options={[{ value: 'mine', label: 'Mine' }, { value: 'family', label: 'Whole family' }]} />
-            </View>
-            <View style={{ width: 150 }}>
-              <Segmented label="Calendar view" value={mode} onChange={(m) => { setMode(m); setMonthCursor({ year: selected.year, month: selected.month }); }} options={[{ value: 'week', label: 'Week' }, { value: 'month', label: 'Month' }]} />
-            </View>
-          </View>
+          <Segmented label="Whose plans to show" value={scope} onChange={setScope} options={[{ value: 'mine', label: 'Mine' }, { value: 'family', label: 'Whole family' }]} />
+          <Segmented label="Calendar view" value={mode} onChange={(m) => { setMode(m); setMonthCursor({ year: selected.year, month: selected.month }); }} options={[{ value: 'week', label: 'Week' }, { value: 'month', label: 'Month' }]} />
           <View style={{ flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' }}>
             <ChoiceChip label="Requests" selected={kind === 'help'} onPress={() => setKind(kind === 'help' ? 'all' : 'help')} />
             <ChoiceChip label="Events" selected={kind === 'event'} onPress={() => setKind(kind === 'event' ? 'all' : 'event')} />
@@ -80,8 +75,9 @@ export default function CalendarScreen() {
 
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <IconButton icon="chevronLeft" label={mode === 'week' ? 'Previous week' : 'Previous month'} onPress={() => step(-1)} />
-            <Pressable accessibilityRole="button" accessibilityLabel={`${rangeLabel}. Go to today`} onPress={goToday} style={{ minHeight: 44, justifyContent: 'center' }}>
-              <Strong>{rangeLabel}</Strong>
+            <Pressable accessibilityRole="button" accessibilityLabel={`${rangeLabel}. Go to today`} onPress={goToday} style={{ flex: 1, minHeight: 48, alignItems: 'center', justifyContent: 'center' }}>
+              <Strong style={{ textAlign: 'center' }}>{rangeLabel}</Strong>
+              {isToday ? null : <Caption style={{ color: colors.primary, textDecorationLine: 'underline' }}>Back to today</Caption>}
             </Pressable>
             <IconButton icon="chevronRight" label={mode === 'week' ? 'Next week' : 'Next month'} onPress={() => step(1)} />
           </View>

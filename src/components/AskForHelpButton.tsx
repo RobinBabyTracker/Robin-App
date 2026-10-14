@@ -19,7 +19,7 @@ export function AskForHelpButton({ date }: { date?: string }) {
       <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.cream, alignItems: 'center', justifyContent: 'center' }}>
         <Robin pose="standing" size={34} />
       </View>
-      <Text maxFontSizeMultiplier={1.4} style={{ color: colors.onPrimary, fontFamily: fonts.bold, fontSize: 16 }}>Ask for help</Text>
+      <Text maxFontSizeMultiplier={1.8} style={{ color: colors.onPrimary, fontFamily: fonts.bold, fontSize: 16 }}>Ask for help</Text>
     </Pressable>
   );
 }

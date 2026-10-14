@@ -33,6 +33,8 @@ export default function Messages() {
             <Icon name="search" size={20} color={colors.textSecondary} />
             <TextInput
               accessibilityLabel="Search chats"
+              returnKeyType="search"
+              maxFontSizeMultiplier={2}
               placeholder="Search people and chats"
               placeholderTextColor={colors.textSecondary}
               value={search}

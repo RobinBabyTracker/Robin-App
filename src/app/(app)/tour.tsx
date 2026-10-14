@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, useWindowDimensions, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { AccessibilityInfo, Pressable, ScrollView, useWindowDimensions, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Caption, Label, Loading, Robin, Title, Voice, type RobinPose } from '@/ui/components';
@@ -64,6 +64,8 @@ export default function Tour() {
   const { isParent, loading } = useFamily();
   const scroller = useRef<ScrollView>(null);
   const [page, setPage] = useState(0);
+  const [reduceMotion, setReduceMotion] = useState(false);
+  useEffect(() => { AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => {}); }, []);
 
   // Count the tour as seen as soon as it opens, so it never nags.
   useEffect(() => { if (userId) guide.markTourSeen(userId); }, [userId]);
@@ -73,11 +75,16 @@ export default function Tour() {
   const slides = isParent ? PARENT_SLIDES : HELPER_SLIDES;
   const last = page === slides.length - 1;
 
+  const announce = (i: number) => AccessibilityInfo.announceForAccessibility(`Step ${i + 1} of ${slides.length}. ${slides[i].title}. ${slides[i].body}`);
   const goTo = (i: number) => {
-    scroller.current?.scrollTo({ x: i * width, animated: true });
+    scroller.current?.scrollTo({ x: i * width, animated: !reduceMotion });
     setPage(i);
+    announce(i);
   };
-  const onScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => setPage(Math.round(e.nativeEvent.contentOffset.x / width));
+  const onScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const i = Math.round(e.nativeEvent.contentOffset.x / width);
+    if (i !== page) { setPage(i); announce(i); }
+  };
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
   return (
@@ -113,7 +120,7 @@ export default function Tour() {
         ))}
       </ScrollView>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: space.sm, paddingVertical: space.lg }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'center', paddingVertical: space.sm }}>
         {slides.map((s, i) => (
           <Pressable
             key={s.title}
@@ -121,7 +128,7 @@ export default function Tour() {
             accessibilityLabel={`Go to step ${i + 1}`}
             accessibilityState={{ selected: i === page }}
             onPress={() => goTo(i)}
-            hitSlop={8}
+            style={{ width: 32, height: 48, alignItems: 'center', justifyContent: 'center' }}
           >
             <View style={{ width: i === page ? 22 : 8, height: 8, borderRadius: 4, backgroundColor: i === page ? colors.primary : colors.textSecondary, opacity: i === page ? 1 : 0.4 }} />
           </Pressable>
@@ -139,7 +146,10 @@ export default function Tour() {
             <Button label="Go to Home" onPress={close} />
           )
         ) : (
-          <Button label="Next" onPress={() => goTo(page + 1)} />
+          <View style={{ flexDirection: 'row', gap: space.sm }}>
+            {page > 0 ? <Button label="Back" variant="secondary" onPress={() => goTo(page - 1)} style={{ flex: 1 }} /> : null}
+            <Button label="Next" onPress={() => goTo(page + 1)} style={{ flex: 1 }} />
+          </View>
         )}
         <Caption style={{ textAlign: 'center' }}>{`${page + 1} of ${slides.length}`}</Caption>
       </View>

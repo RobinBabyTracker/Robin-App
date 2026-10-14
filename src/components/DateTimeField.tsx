@@ -37,7 +37,7 @@ export function DateTimeField({ label, value, onChange, dateOnly, error }: {
   return (
     <View style={{ gap: 6 }}>
       <Label>{label}</Label>
-      <View style={{ flexDirection: 'row', gap: space.sm }}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
         <FieldButton
           icon="calendar"
           text={formatDate(value, { weekday: true, year: true })}
@@ -77,7 +77,7 @@ function FieldButton({ icon, text, a11y, onPress, error }: { icon: 'calendar' | 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={a11y}
+      accessibilityLabel={error ? `${a11y}. This needs another look` : a11y}
       onPress={onPress}
       style={({ pressed }) => ({
         flexGrow: 1, minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: 14,
@@ -86,7 +86,7 @@ function FieldButton({ icon, text, a11y, onPress, error }: { icon: 'calendar' | 
       })}
     >
       <Icon name={icon} size={18} />
-      <Text maxFontSizeMultiplier={1.6} style={{ fontFamily: fonts.body, fontSize: 17, color: colors.text }}>{text}</Text>
+      <Text maxFontSizeMultiplier={2} style={{ flexShrink: 1, fontFamily: fonts.body, fontSize: 17, color: colors.text }}>{text}</Text>
     </Pressable>
   );
 }

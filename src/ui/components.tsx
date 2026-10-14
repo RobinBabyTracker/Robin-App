@@ -1,11 +1,12 @@
 import React from 'react';
 import {
-  ActivityIndicator, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View,
+  ActivityIndicator, KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View,
   type PressableProps, type ScrollViewProps, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle,
   type RefreshControlProps,
 } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
+import { HeaderHeightContext } from 'expo-router/react-navigation';
 import { colors, radius, space, touch, type, fonts } from './theme';
 import { Icon, type IconName } from './Icon';
 import { ROBIN_FLYING, ROBIN_PECKING, ROBIN_SINGING, ROBIN_STANDING } from './robinArt';
@@ -64,10 +65,14 @@ export function Screen({
   ) : (
     <View style={[{ flex: 1 }, padded && styles.padded, contentStyle]}>{children}</View>
   );
+  const headerHeight = React.useContext(HeaderHeightContext) ?? 0;
   return (
     <SafeAreaView style={styles.screen} edges={edges}>
-      {inner}
-      {footer}
+      {/* Android draws edge to edge, so the window no longer shrinks for the keyboard. Make room ourselves. */}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding" keyboardVerticalOffset={headerHeight}>
+        {inner}
+        {footer}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -135,8 +140,8 @@ export function Button({ label, variant = 'primary', loading, disabled, icon, st
         <>
           {icon ? <Icon name={icon} size={20} color={isDisabled ? colors.disabledText : fg} /> : null}
           <Text
-            maxFontSizeMultiplier={1.6}
-            style={[type.label, { color: isDisabled ? colors.disabledText : fg }, variant === 'text' && { textDecorationLine: 'underline', color: colors.primary }]}
+            maxFontSizeMultiplier={2}
+            style={[type.label, { flexShrink: 1, textAlign: 'center', color: isDisabled ? colors.disabledText : fg }, variant === 'text' && { textDecorationLine: 'underline', color: colors.primary }]}
           >
             {label}
           </Text>
@@ -151,12 +156,13 @@ export function IconButton({ icon, label, onPress, badge, color = colors.text, d
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityState={{ disabled: !!disabled }}
       onPress={onPress}
       disabled={disabled}
       hitSlop={4}
-      style={({ pressed }) => [styles.iconButton, pressed && { backgroundColor: 'rgba(60,56,19,0.08)' }]}
+      style={({ pressed }) => [styles.iconButton, pressed && { backgroundColor: 'rgba(60,56,19,0.08)' }, disabled && { opacity: 0.45 }]}
     >
-      <Icon name={icon} size={24} color={disabled ? colors.border : color} />
+      <Icon name={icon} size={24} color={disabled ? colors.textSecondary : color} />
       {badge ? <View style={styles.dot} /> : null}
     </Pressable>
   );
@@ -172,10 +178,10 @@ export function TextField({ label, error, hint, style, multiline, ...rest }: Tex
     <View style={{ gap: 6 }}>
       <Label>{label}</Label>
       <TextInput
-        accessibilityLabel={label}
-        accessibilityHint={error ?? hint}
+        accessibilityLabel={error ? `${label}. Error: ${error}` : label}
+        accessibilityHint={hint}
         placeholderTextColor={colors.textSecondary}
-        maxFontSizeMultiplier={1.8}
+        maxFontSizeMultiplier={2}
         multiline={multiline}
         onFocus={(e) => { setFocused(true); rest.onFocus?.(e); }}
         onBlur={(e) => { setFocused(false); rest.onBlur?.(e); }}
@@ -212,10 +218,11 @@ export function Segmented<T extends string>({ options, value, onChange, label }:
             key={o.value}
             accessibilityRole="radio"
             accessibilityState={{ checked: on }}
+            accessibilityLabel={o.label}
             onPress={() => onChange(o.value)}
             style={[styles.segment, on && { backgroundColor: colors.primary }]}
           >
-            <Text maxFontSizeMultiplier={1.5} style={[type.label, { color: on ? colors.onPrimary : colors.text }]}>{o.label}</Text>
+            <Text maxFontSizeMultiplier={2} style={[type.label, { textAlign: 'center', color: on ? colors.onPrimary : colors.text }]}>{o.label}</Text>
           </Pressable>
         );
       })}
@@ -223,38 +230,50 @@ export function Segmented<T extends string>({ options, value, onChange, label }:
   );
 }
 
-export function ChoiceChip({ label, selected, onPress, icon }: { label: string; selected: boolean; onPress: () => void; icon?: IconName }) {
+/** A selectable chip. Use single for one-of-many choices (announced as a radio button). */
+export function ChoiceChip({ label, selected, onPress, icon, single }: { label: string; selected: boolean; onPress: () => void; icon?: IconName; single?: boolean }) {
   return (
     <Pressable
-      accessibilityRole="checkbox"
+      accessibilityRole={single ? 'radio' : 'checkbox'}
       accessibilityState={{ checked: selected }}
       accessibilityLabel={label}
       onPress={onPress}
       style={[styles.choice, selected && { backgroundColor: colors.primary, borderColor: colors.primary }]}
     >
       {icon ? <Icon name={icon} size={18} color={selected ? colors.onPrimary : colors.text} /> : null}
-      <Text maxFontSizeMultiplier={1.6} style={[type.label, { color: selected ? colors.onPrimary : colors.text }]}>{label}</Text>
+      <Text maxFontSizeMultiplier={2} style={[type.label, { flexShrink: 1, color: selected ? colors.onPrimary : colors.text }]}>{label}</Text>
       {selected ? <Icon name="check" size={16} color={colors.onPrimary} /> : null}
     </Pressable>
   );
 }
 
 export function ToggleRow({ label, hint, value, onValueChange, disabled }: { label: string; hint?: string; value: boolean; onValueChange: (v: boolean) => void; disabled?: boolean }) {
+  // The whole row is one control, so the label, hint and switch are read together.
   return (
-    <View style={[styles.row, { minHeight: 56 }]}>
+    <Pressable
+      accessibilityRole="switch"
+      accessibilityLabel={label}
+      accessibilityHint={hint}
+      accessibilityState={{ checked: value, disabled: !!disabled }}
+      onPress={() => onValueChange(!value)}
+      disabled={disabled}
+      style={[styles.row, { minHeight: 56 }]}
+    >
       <View style={{ flex: 1, gap: 2 }}>
         <Label>{label}</Label>
         {hint ? <Caption>{hint}</Caption> : null}
       </View>
       <Switch
-        accessibilityLabel={label}
+        importantForAccessibility="no-hide-descendants"
+        accessibilityElementsHidden
         value={value}
         onValueChange={onValueChange}
         disabled={disabled}
-        trackColor={{ true: colors.primary, false: colors.border }}
+        trackColor={{ true: colors.primary, false: colors.textSecondary }}
+        ios_backgroundColor={colors.textSecondary}
         thumbColor={colors.surface}
       />
-    </View>
+    </Pressable>
   );
 }
 
@@ -276,7 +295,7 @@ export function Pill({ label, icon, tone = 'pink' }: { label: string; icon?: Ico
       ]}
     >
       {icon ? <Icon name={icon} size={14} color={fg} strokeWidth={2.4} /> : null}
-      <Text maxFontSizeMultiplier={1.6} style={[type.caption, { color: fg, fontFamily: fonts.bold }]}>{label}</Text>
+      <Text maxFontSizeMultiplier={2} style={[type.caption, { color: fg, fontFamily: fonts.bold, flexShrink: 1 }]}>{label}</Text>
     </View>
   );
 }
@@ -313,7 +332,7 @@ export function RobinNote({ text, pose = 'standing', chirp, action }: { text: st
       <View style={{ flex: 1, gap: space.sm }}>
         <Voice>
           {text}
-          {chirp ? <Text style={{ fontSize: 11 }}> *chirp*</Text> : null}
+          {chirp ? <Text style={{ fontSize: 11 }} accessibilityElementsHidden importantForAccessibility="no"> *chirp*</Text> : null}
         </Voice>
         {action ? <Button label={action.label} icon={action.icon} small onPress={action.onPress} style={{ alignSelf: 'flex-start' }} /> : null}
       </View>
@@ -394,7 +413,7 @@ export function ListRow({
     <>
       {left}
       <View style={{ flex: 1, gap: 2 }}>
-        <Strong numberOfLines={1}>{title}</Strong>
+        <Strong numberOfLines={2}>{title}</Strong>
         {subtitle ? <Caption numberOfLines={2}>{subtitle}</Caption> : null}
       </View>
       {right}
@@ -402,9 +421,10 @@ export function ListRow({
     </>
   );
   const style = [styles.row, !last && { borderBottomWidth: 1, borderBottomColor: colors.divider }];
-  if (!onPress) return <View style={style} accessibilityLabel={accessibilityLabel}>{content}</View>;
+  const spoken = accessibilityLabel ?? [title, subtitle].filter(Boolean).join('. ');
+  if (!onPress) return <View style={style} accessible accessibilityLabel={spoken}>{content}</View>;
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? title} onPress={onPress} style={({ pressed }) => [style, pressed && { backgroundColor: colors.cream }]}>
+    <Pressable accessibilityRole="button" accessibilityLabel={spoken} onPress={onPress} style={({ pressed }) => [style, pressed && { backgroundColor: colors.cream }]}>
       {content}
     </Pressable>
   );
@@ -426,9 +446,9 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 14, fontFamily: fonts.body, fontSize: 17, color: colors.text,
   },
   segmented: { flexDirection: 'row', padding: 4, borderRadius: radius.pill, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
-  segment: { flex: 1, minHeight: 40, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.sm },
+  segment: { flex: 1, minHeight: 48, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', paddingHorizontal: space.sm },
   choice: {
-    flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: 14, borderRadius: radius.pill,
+    flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 48, paddingHorizontal: 14, paddingVertical: 6, borderRadius: radius.pill,
     borderWidth: 1.5, borderColor: colors.text, backgroundColor: colors.surface,
   },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill },

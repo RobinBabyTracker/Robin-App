@@ -33,7 +33,7 @@ export default function Forgot() {
       <Stack gap={space.lg}>
         <Voice>Enter your email and we'll send a code to set a new password.</Voice>
         {error ? <Banner tone="error" text={error} /> : null}
-        <TextField label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" error={touched ? validateEmail(email) : null} />
+        <TextField label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" textContentType="emailAddress" error={touched ? validateEmail(email) : null} />
         <Button label="Send code" loading={busy} onPress={submit} />
       </Stack>
     </Screen>

@@ -220,7 +220,7 @@ function PeopleList({ title, ids, nameOf, onMessage, me, busy }: { title: string
         <View key={u} style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
           <Avatar name={nameOf(u)} size={36} />
           <Strong style={{ flex: 1 }}>{nameOf(u)}</Strong>
-          {onMessage && u !== me ? <Button label="Message" small variant="text" loading={busy === `msg:${u}`} onPress={() => onMessage(u)} /> : null}
+          {onMessage && u !== me ? <Button label="Message" accessibilityLabel={`Message ${nameOf(u)}`} small variant="text" loading={busy === `msg:${u}`} onPress={() => onMessage(u)} /> : null}
         </View>
       ))}
     </Stack>

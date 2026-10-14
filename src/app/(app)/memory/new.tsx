@@ -68,8 +68,8 @@ export default function NewMemory() {
           </ScrollView>
         )}
         <View style={{ flexDirection: 'row', gap: space.sm }}>
-          <Button label="Choose" icon="image" variant="secondary" onPress={() => add('library')} style={{ flex: 1 }} />
-          <Button label="Camera" icon="camera" variant="secondary" onPress={() => add('camera')} style={{ flex: 1 }} />
+          <Button label="Choose" accessibilityLabel="Choose photos or videos" icon="image" variant="secondary" onPress={() => add('library')} style={{ flex: 1 }} />
+          <Button label="Camera" accessibilityLabel="Take a photo or video" icon="camera" variant="secondary" onPress={() => add('camera')} style={{ flex: 1 }} />
         </View>
         <Card>
           <Stack gap={space.lg}>

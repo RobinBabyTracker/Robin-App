@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { AccessibilityInfo, ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { Stack as RouterStack, router, useLocalSearchParams } from 'expo-router';
+import { HeaderHeightContext } from 'expo-router/react-navigation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Crypto from 'expo-crypto';
 import { useQueryClient } from '@tanstack/react-query';
@@ -23,6 +24,7 @@ type Outgoing = { clientId: string; body: string; mediaIds: string[]; status: 's
 export default function Chat() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
+  const headerHeight = useContext(HeaderHeightContext) ?? 0;
   const { userId, timezone } = useAuth();
   const { familyId } = useFamily();
   const qc = useQueryClient();
@@ -90,7 +92,7 @@ export default function Chat() {
     const buttons: { text: string; style?: 'destructive' | 'cancel'; onPress?: () => void }[] = [];
     const media = (m.message_attachments ?? []).map((a) => a.media).filter(Boolean) as Media[];
     if (media.length) buttons.push({ text: media.length === 1 ? 'Save to Memories' : `Save ${media.length} to Memories`, onPress: () => saveToMemories(m, media) });
-    if (m.sender_id === userId && !m.deleted_at) buttons.push({ text: 'Delete message', style: 'destructive', onPress: () => deleteMessage(m) });
+    if (m.sender_id === userId && !m.deleted_at) buttons.push({ text: 'Delete message', style: 'destructive', onPress: () => confirmDelete(m) });
     if (!buttons.length) return;
     buttons.push({ text: 'Cancel', style: 'cancel' });
     Alert.alert('Message', undefined, buttons);
@@ -100,10 +102,19 @@ export default function Chat() {
     try {
       for (const md of media) await rpc('add_memory', { p_media: md.id, p_source_message: m.id, p_taken_on: m.created_at.slice(0, 10) });
       qc.invalidateQueries({ queryKey: keys.memories(familyId) });
-      setNotice(media.length === 1 ? 'Saved to Memories.' : `${media.length} saved to Memories.`);
+      const msg = media.length === 1 ? 'Saved to Memories.' : `${media.length} saved to Memories.`;
+      setNotice(msg);
+      AccessibilityInfo.announceForAccessibility(msg);
     } catch (e) {
       setError(friendlyError(e));
     }
+  };
+
+  const confirmDelete = (m: Message) => {
+    Alert.alert('Delete this message?', 'It will be removed for everyone in this chat.', [
+      { text: 'Keep it', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => deleteMessage(m) },
+    ]);
   };
 
   const deleteMessage = async (m: Message) => {
@@ -122,13 +133,21 @@ export default function Chat() {
   const canSend = (!!text.trim() || uploads.ready) && !uploads.busy && !uploads.failed && uploads.entries.every((e) => !e.item.problem);
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={insets.top + 44}>
+    // Android draws edge to edge, so the window no longer shrinks for the
+    // keyboard: pad the screen ourselves on both platforms.
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior="padding" keyboardVerticalOffset={headerHeight}>
       <RouterStack.Screen options={{
         title,
         headerRight: () => <IconButton icon="more" label="Chat details" onPress={() => router.push(`/chat/${id}/details`)} />,
       }} />
       {error ? <View style={{ padding: space.sm }}><Banner tone="error" text={error} action={{ label: 'Dismiss', onPress: () => setError(null) }} /></View> : null}
       {notice ? <View style={{ padding: space.sm }}><Banner tone="success" text={notice} action={{ label: 'OK', onPress: () => setNotice(null) }} /></View> : null}
+      {!all.length && !outbox.length ? (
+        // Shown outside the list: an inverted list would draw it upside down or mirrored.
+        <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end' }} keyboardShouldPersistTaps="handled">
+          <EmptyState pose="singing" title="Say hello" body="Messages and photos here are only seen by people in this chat." />
+        </ScrollView>
+      ) : (
       <FlatList
         inverted
         data={all}
@@ -144,8 +163,8 @@ export default function Chat() {
                   {o.mediaIds.length ? <Caption style={{ color: colors.cream }}>{o.mediaIds.length} photo{o.mediaIds.length === 1 ? '' : 's'} or video{o.mediaIds.length === 1 ? '' : 's'}</Caption> : null}
                   {o.body ? <Body style={{ color: colors.onPrimary }}>{o.body}</Body> : null}
                 </View>
-                {o.status === 'sending' ? <Caption style={{ textAlign: 'right' }}>Sending…</Caption> : (
-                  <Pressable accessibilityRole="button" accessibilityLabel="Not sent. Tap to try again" onPress={() => send(o)} style={{ flexDirection: 'row', gap: 4, alignSelf: 'flex-end', alignItems: 'center', minHeight: 32 }}>
+                {o.status === 'sending' ? <View accessibilityLiveRegion="polite"><Caption style={{ textAlign: 'right' }}>Sending…</Caption></View> : (
+                  <Pressable accessibilityRole="button" accessibilityLiveRegion="polite" accessibilityLabel="Not sent. Tap to try again" onPress={() => send(o)} style={{ flexDirection: 'row', gap: 4, alignSelf: 'flex-end', alignItems: 'center', minHeight: 48, paddingLeft: space.md }}>
                     <Icon name="alert" size={14} color={colors.danger} />
                     <Caption style={{ color: colors.danger }}>Not sent · Tap to retry</Caption>
                   </Pressable>
@@ -155,7 +174,7 @@ export default function Chat() {
           </View>
         }
         ListFooterComponent={msgs.isFetchingNextPage ? <ActivityIndicator color={colors.primary} /> : !msgs.hasNextPage && all.length ? <Caption style={{ textAlign: 'center', marginBottom: space.lg }}>Start of your chat</Caption> : null}
-        ListEmptyComponent={outbox.length ? null : <View style={{ transform: [{ scaleY: -1 }] }}><EmptyState pose="singing" title="Say hello" body="Messages and photos here are only seen by people in this chat." /></View>}
+        keyboardShouldPersistTaps="handled"
         renderItem={({ item: m, index }) => {
           const mine = m.sender_id === userId;
           const older = all[index + 1];
@@ -164,13 +183,27 @@ export default function Chat() {
           const media = (m.message_attachments ?? []).sort((a, b) => a.position - b.position).map((a) => a.media).filter(Boolean) as Media[];
           const isLatestMine = mine && all.find((x) => x.sender_id === userId)?.id === m.id;
           const reads = mine ? readCount(m.created_at) : 0;
+          const hasOptions = media.length > 0 || (mine && !m.deleted_at);
           return (
             <View style={{ gap: 4 }}>
               {showDay ? <Caption style={{ textAlign: 'center', marginVertical: space.sm }}>{dayLabel(m.created_at, timezone)}</Caption> : null}
               {showName ? <Caption style={{ marginLeft: 4 }}>{nameOf(m.sender_id)}</Caption> : null}
               <Pressable
-                onLongPress={() => onLongPress(m)}
-                accessibilityHint={media.length || mine ? 'Long press for options' : undefined}
+                // Tap or long-press a message for options; screen readers get the same options as actions.
+                onPress={hasOptions ? () => onLongPress(m) : undefined}
+                onLongPress={hasOptions ? () => onLongPress(m) : undefined}
+                accessible={!media.length}
+                accessibilityRole={hasOptions ? 'button' : 'text'}
+                accessibilityLabel={`${mine ? 'You' : nameOf(m.sender_id)}: ${m.deleted_at ? 'message deleted' : m.body ?? ''}. ${formatTime(m.created_at, timezone)}`}
+                accessibilityHint={hasOptions ? 'Opens message options' : undefined}
+                accessibilityActions={[
+                  ...(media.length ? [{ name: 'save', label: 'Save to Memories' }] : []),
+                  ...(mine && !m.deleted_at ? [{ name: 'delete', label: 'Delete message' }] : []),
+                ]}
+                onAccessibilityAction={(e) => {
+                  if (e.nativeEvent.actionName === 'save') saveToMemories(m, media);
+                  if (e.nativeEvent.actionName === 'delete') confirmDelete(m);
+                }}
                 style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '80%', gap: 4 }}
               >
                 {media.length ? (
@@ -192,6 +225,7 @@ export default function Chat() {
           );
         }}
       />
+      )}
 
       {uploads.entries.length ? (
         <ScrollView horizontal contentContainerStyle={{ gap: space.sm, padding: space.sm }} style={{ maxHeight: 210, backgroundColor: colors.cream }}>
@@ -212,7 +246,8 @@ export default function Chat() {
           onChangeText={setText}
           multiline
           maxLength={4000}
-          style={{ flex: 1, minHeight: 44, maxHeight: 140, paddingHorizontal: 14, paddingVertical: 10, borderRadius: radius.lg, backgroundColor: colors.background, fontFamily: fonts.body, fontSize: 17, color: colors.text }}
+          style={{ flex: 1, minHeight: 44, maxHeight: 140, paddingHorizontal: 14, paddingVertical: 10, borderRadius: radius.lg, borderWidth: 1.5, borderColor: colors.textSecondary, backgroundColor: colors.surface, fontFamily: fonts.body, fontSize: 17, color: colors.text }}
+          maxFontSizeMultiplier={1.8}
         />
         <Pressable
           accessibilityRole="button"

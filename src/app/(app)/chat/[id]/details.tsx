@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { View, Alert } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -110,7 +110,10 @@ export default function ChatDetails() {
 
         {c.kind === 'group' ? (
           <Button label="Leave group" icon="logout" variant="danger" loading={busy === 'leave'}
-            onPress={() => run('leave', async () => { await rpc('leave_conversation', { p_conversation: id }); router.dismissTo('/messages'); }, 'You left the group.')} />
+            onPress={() => Alert.alert('Leave this group?', 'You won’t see new messages here. Someone in the group can add you back.', [
+              { text: 'Stay', style: 'cancel' },
+              { text: 'Leave', style: 'destructive', onPress: () => run('leave', async () => { await rpc('leave_conversation', { p_conversation: id }); router.dismissTo('/messages'); }, 'You left the group.') },
+            ])} />
         ) : null}
       </Stack>
       <MediaViewer visible={!!viewer} media={viewer} onClose={() => setViewer(null)} />

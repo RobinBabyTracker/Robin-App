@@ -37,14 +37,14 @@ export function MediaThumb({ media, size = 160, onPress, label }: { media: Media
       {media.kind === 'video' ? (
         <View style={{ position: 'absolute', bottom: 6, left: 6, backgroundColor: colors.text, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2, flexDirection: 'row', gap: 4, alignItems: 'center' }}>
           <Icon name="video" size={12} color={colors.cream} />
-          <Caption style={{ color: colors.cream, fontSize: 11 }}>{media.duration_ms ? `${Math.floor(media.duration_ms / 60000)}:${String(Math.round((media.duration_ms % 60000) / 1000)).padStart(2, '0')}` : 'Video'}</Caption>
+          <Caption style={{ color: colors.cream, fontSize: 11 }}>{media.duration_ms ? `${Math.floor(media.duration_ms / 60000)}:${String(Math.floor((media.duration_ms % 60000) / 1000)).padStart(2, '0')}` : 'Video'}</Caption>
         </View>
       ) : null}
     </View>
   );
   if (!onPress) return content;
   return (
-    <Pressable accessibilityRole="imagebutton" accessibilityLabel={label ?? (media.kind === 'photo' ? 'Photo. Open' : 'Video. Open')} onPress={onPress}>
+    <Pressable accessibilityRole="imagebutton" accessibilityLabel={label ?? (media.kind === 'photo' ? 'Open photo' : 'Open video')} onPress={onPress}>
       {content}
     </Pressable>
   );
@@ -57,7 +57,7 @@ export function MediaViewer({ media, visible, onClose, caption, actions }: {
   const insets = useSafeAreaInsets();
   return (
     <Modal visible={visible && !!media} animationType="fade" onRequestClose={onClose} supportedOrientations={['portrait', 'landscape']}>
-      <View style={{ flex: 1, backgroundColor: '#1d1b09', paddingTop: insets.top, paddingBottom: insets.bottom }}>
+      <View accessibilityViewIsModal style={{ flex: 1, backgroundColor: '#1d1b09', paddingTop: insets.top, paddingBottom: insets.bottom }}>
         <View style={{ flexDirection: 'row', justifyContent: 'flex-end', padding: space.sm }}>
           <IconButton icon="close" label="Close" color={colors.cream} onPress={onClose} />
         </View>
@@ -93,12 +93,12 @@ export function PendingUpload({ item, state, onRetry, onRemove }: { item: Picked
         {item.kind === 'photo' ? <Image source={{ uri: item.uri }} style={{ width: '100%', height: '100%' }} contentFit="cover" /> : (
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><Icon name="video" size={32} /></View>
         )}
-        <View style={{ position: 'absolute', top: 2, right: 2 }}>
-          <IconButton icon="close" label="Remove" onPress={onRemove} />
+        <View style={{ position: 'absolute', top: 2, right: 2, borderRadius: 24, backgroundColor: colors.cream }}>
+          <IconButton icon="close" label={`Remove this ${item.kind === 'photo' ? 'photo' : 'video'}`} onPress={onRemove} />
         </View>
       </View>
       {item.problem ? <Caption style={{ color: colors.danger }}>{item.problem}</Caption>
-        : state.status === 'uploading' ? <ProgressBar progress={state.progress} label="Uploading" />
+        : state.status === 'uploading' ? <ProgressBar progress={state.progress} label={`Uploading, ${Math.round(state.progress * 100)} percent`} />
         : state.status === 'done' ? <Caption>Ready</Caption>
         : state.status === 'failed' ? (
           <>

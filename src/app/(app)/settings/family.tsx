@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { router } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -15,6 +15,11 @@ import type { Invitation, MemberWithProfile, Role } from '@/lib/types';
 import { space } from '@/ui/theme';
 
 const ROLE: Record<Role, string> = { owner: 'Owner', parent: 'Parent', helper: 'Helper' };
+
+/** Asks before anything that's hard to undo, so a mis-tap never removes someone. */
+function confirm(title: string, message: string, action: string, onYes: () => void) {
+  Alert.alert(title, message, [{ text: 'Not now', style: 'cancel' }, { text: action, style: 'destructive', onPress: onYes }]);
+}
 
 function inviteState(i: Invitation) {
   if (i.revoked_at) return 'Cancelled';
@@ -95,7 +100,11 @@ export default function FamilySettings() {
                     <Pill tone={m.role === 'helper' ? 'pink' : 'olive'} label={ROLE[m.role]} />
                   </View>
                   {manageable ? (
-                    <Button label={expanded ? 'Done' : 'Manage'} variant="text" small onPress={() => setOpen(expanded ? null : m.user_id)} style={{ alignSelf: 'flex-end' }} />
+                    <Button
+                      label={expanded ? 'Done' : 'Manage'}
+                      accessibilityLabel={`${expanded ? 'Done managing' : 'Manage'} ${m.profile?.display_name ?? 'member'}`}
+                      accessibilityState={{ expanded }}
+                      variant="text" small onPress={() => setOpen(expanded ? null : m.user_id)} style={{ alignSelf: 'flex-end' }} />
                   ) : null}
                   {expanded ? (
                     <Stack gap={space.sm}>
@@ -104,8 +113,17 @@ export default function FamilySettings() {
                           <Caption>Role</Caption>
                           <View style={{ flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' }}>
                             {(['owner', 'parent', 'helper'] as Role[]).map((r) => (
-                              <ChoiceChip key={r} label={ROLE[r]} selected={m.role === r}
-                                onPress={() => m.role !== r && run(`role:${m.user_id}`, () => rpc('set_member_role', { p_family: familyId, p_user: m.user_id, p_role: r }), `${m.profile?.display_name ?? 'They'} is now ${ROLE[r].toLowerCase()}.`)} />
+                              <ChoiceChip single key={r} label={ROLE[r]} selected={m.role === r}
+                                onPress={() => {
+                                  if (m.role === r) return;
+                                  const who = m.profile?.display_name ?? 'They';
+                                  const change = () => run(`role:${m.user_id}`, () => rpc('set_member_role', { p_family: familyId, p_user: m.user_id, p_role: r }), `${who} is now ${ROLE[r].toLowerCase()}.`);
+                                  confirm(`Make ${who} ${ROLE[r].toLowerCase()}?`,
+                                    r === 'owner' ? 'Owners can change everyone’s role and remove anyone except other owners.'
+                                      : r === 'parent' ? 'Parents can ask for help, invite people and remove helpers.'
+                                      : 'Helpers can reply to requests, chat and see shared memories.',
+                                    'Change role', change);
+                                }} />
                             ))}
                           </View>
                           <Caption>Parents can ask for help, invite and remove helpers. Owners can also change roles.</Caption>
@@ -113,7 +131,8 @@ export default function FamilySettings() {
                       ) : null}
                       {canRemove(m) ? (
                         <Button label={`Remove ${m.profile?.display_name ?? 'member'}`} variant="danger" small loading={busy === `rm:${m.user_id}`}
-                          onPress={() => run(`rm:${m.user_id}`, () => rpc('remove_member', { p_family: familyId, p_user: m.user_id }), 'Removed. They can no longer see anything in this family.').then(() => setOpen(null))} />
+                          onPress={() => confirm(`Remove ${m.profile?.display_name ?? 'this person'}?`, 'They’ll lose access to everything in this family straight away. You can invite them again later.', 'Remove',
+                            () => run(`rm:${m.user_id}`, () => rpc('remove_member', { p_family: familyId, p_user: m.user_id }), 'Removed. They can no longer see anything in this family.').then(() => setOpen(null)))} />
                       ) : null}
                     </Stack>
                   ) : null}
@@ -135,8 +154,9 @@ export default function FamilySettings() {
                         <Strong>{i.note || `${ROLE[i.role]} invitation`}</Strong>
                         <Caption>From {name(i.invited_by, 'a parent')} · expires {new Date(i.expires_at).toLocaleDateString()}</Caption>
                       </View>
-                      <Button label="Cancel" small variant="danger" loading={busy === `rv:${i.id}`}
-                        onPress={() => run(`rv:${i.id}`, () => rpc('revoke_invitation', { p_invitation: i.id }), 'Invitation cancelled. That code no longer works.')} />
+                      <Button label="Cancel" accessibilityLabel={`Cancel invitation${i.note ? ` for ${i.note}` : ''}`} small variant="danger" loading={busy === `rv:${i.id}`}
+                        onPress={() => confirm('Cancel this invitation?', 'The code will stop working. You can always make a new one.', 'Cancel invitation',
+                          () => run(`rv:${i.id}`, () => rpc('revoke_invitation', { p_invitation: i.id }), 'Invitation cancelled. That code no longer works.'))} />
                     </View>
                   </Card>
                 ))}

@@ -24,13 +24,13 @@ export function AppHeader({ title, right }: { title: string; right?: React.React
               accessibilityRole="button"
               accessibilityLabel={`Current family: ${current.name}. Switch family`}
               onPress={() => router.push('/settings/families')}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 32 }}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 48 }}
             >
               <Caption>{current.name}</Caption>
               <Icon name="chevronDown" size={14} color={colors.textSecondary} />
             </Pressable>
           ) : null}
-          <Display numberOfLines={1}>{title}</Display>
+          <Display numberOfLines={2}>{title}</Display>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           {right}

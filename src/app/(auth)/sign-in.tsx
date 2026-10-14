@@ -48,9 +48,9 @@ export default function SignIn() {
         />
         {mode === 'code' ? <Voice>No password needed. We'll email you a 6-digit code.</Voice> : null}
         {error ? <Banner tone="error" text={error} /> : null}
-        <TextField label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" textContentType="emailAddress" error={emailErr} />
+        <TextField label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" textContentType="emailAddress" returnKeyType="next" error={emailErr} />
         {mode === 'password' ? (
-          <TextField label="Password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" textContentType="password" onSubmitEditing={submit} />
+          <TextField label="Password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" textContentType="password" returnKeyType="go" onSubmitEditing={submit} />
         ) : null}
         <Button label={mode === 'password' ? 'Sign in' : 'Send my code'} loading={busy} onPress={submit} />
         {mode === 'password' ? <Button label="Forgotten your password?" variant="text" onPress={() => router.push('/forgot')} /> : null}

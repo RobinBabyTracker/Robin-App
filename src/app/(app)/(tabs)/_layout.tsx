@@ -24,7 +24,8 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.text,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border, height: 84, paddingTop: 6 },
+        // No fixed height: the tab bar grows for the phone's navigation bar and larger text.
+        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border, paddingTop: 6 },
         tabBarLabelStyle: { fontFamily: fonts.bold, fontSize: 12 },
         sceneStyle: { backgroundColor: colors.background },
       }}

@@ -1,8 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { AccessibilityInfo, View } from 'react-native';
 import { router } from 'expo-router';
 import * as Crypto from 'expo-crypto';
-import { Banner, Body, Button, Caption, Card, ChoiceChip, Heading, IconButton, Segmented, Stack, Strong, TextField, ToggleRow, RobinNote } from '@/ui/components';
+import { Banner, Body, Button, Caption, Card, ChoiceChip, Heading, IconButton, Segmented, Stack, Strong, TextField, ToggleRow, RobinNote, FieldError } from '@/ui/components';
 import { DateTimeField } from './DateTimeField';
 import { CATEGORIES } from './tasks';
 import { useAuth } from '@/state/auth';
@@ -100,7 +100,12 @@ export function TaskForm({ initial, presetDate, submitting, serverError, onSubmi
   const submit = (mode: 'send' | 'draft') => {
     setTouched(true);
     const errs = errorsFor(mode);
-    if (Object.keys(errs).length) return;
+    const n = Object.keys(errs).length;
+    if (n) {
+      // The summary banner is at the top, out of view: say it out loud too.
+      AccessibilityInfo.announceForAccessibility(`${n === 1 ? 'One thing needs' : `${n} things need`} another look: ${Object.values(errs).join('. ')}`);
+      return;
+    }
     const d = draft();
     onSubmit({
       kind, category, title: title.trim(), description, location, notes, links,
@@ -147,7 +152,7 @@ export function TaskForm({ initial, presetDate, submitting, serverError, onSubmi
           <Heading>{kind === 'help' ? 'What do you need a hand with?' : 'What’s happening?'}</Heading>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }} accessibilityRole="radiogroup" accessibilityLabel="Type">
             {CATEGORIES.filter((c) => (kind === 'event' ? ['family_event', 'appointment', 'other'] : CATEGORIES.map((x) => x.value).filter((v) => v !== 'family_event')).includes(c.value)).map((c) => (
-              <ChoiceChip key={c.value} label={c.label} icon={c.icon} selected={category === c.value} onPress={() => setCategory(c.value)} />
+              <ChoiceChip single key={c.value} label={c.label} icon={c.icon} selected={category === c.value} onPress={() => setCategory(c.value)} />
             ))}
           </View>
           <TextField label="Title" value={title} onChangeText={setTitle} maxLength={120} placeholder={kind === 'help' ? 'School pick-up' : 'Poppy’s birthday picnic'} error={errors.title} />
@@ -165,7 +170,7 @@ export function TaskForm({ initial, presetDate, submitting, serverError, onSubmi
             setEnd(plusHours(end, shift)); // keep the same length when the start moves
           }} />
           <DateTimeField label="Ends" value={end} dateOnly={allDay} error={!!errors.time} onChange={setEnd} />
-          {errors.time ? <Caption style={{ color: colors.danger }}>{errors.time}</Caption> : null}
+          {errors.time ? <FieldError text={errors.time} /> : null}
           <Caption>Times are in your time zone ({timezone.replace(/_/g, ' ')}).</Caption>
         </Stack>
       </Card>
@@ -193,10 +198,22 @@ export function TaskForm({ initial, presetDate, submitting, serverError, onSubmi
               </View>
             ) : <Body>There’s no one else in your family yet. Invite someone first, using the button at the top.</Body>
           ) : <Caption>Everyone in your family except you will be asked{kind === 'help' ? '. The first to say yes gets it' : ''}.</Caption>}
-          {errors.invitees ? <Caption style={{ color: colors.danger }}>{errors.invitees}</Caption> : null}
+          {errors.invitees ? <FieldError text={errors.invitees} /> : null}
 
           {kind === 'help' ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View
+              style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+              // One control for screen readers: swipe up or down to change the number.
+              accessible
+              accessibilityRole="adjustable"
+              accessibilityLabel="Helpers needed"
+              accessibilityValue={{ text: helpers === 1 ? 'One person' : `${helpers} people` }}
+              accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+              onAccessibilityAction={(e) => {
+                if (e.nativeEvent.actionName === 'increment') setHelpers(Math.min(20, helpers + 1));
+                if (e.nativeEvent.actionName === 'decrement') setHelpers(Math.max(1, helpers - 1));
+              }}
+            >
               <View style={{ flex: 1 }}>
                 <Strong>Helpers needed</Strong>
                 <Caption>{helpers === 1 ? 'One person, first to say yes.' : `The first ${helpers} to say yes.`}</Caption>
@@ -209,7 +226,7 @@ export function TaskForm({ initial, presetDate, submitting, serverError, onSubmi
 
           <ToggleRow label="Ask for replies by a set time" hint="Optional. Helpful if you need to know early." value={useRespondBy} onValueChange={setUseRespondBy} />
           {useRespondBy ? <DateTimeField label="Reply by" value={respondBy} onChange={setRespondBy} error={!!errors.respondBy} /> : null}
-          {errors.respondBy ? <Caption style={{ color: colors.danger }}>{errors.respondBy}</Caption> : null}
+          {errors.respondBy ? <FieldError text={errors.respondBy} /> : null}
         </Stack>
       </Card>
 

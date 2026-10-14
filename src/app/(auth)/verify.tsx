@@ -70,7 +70,7 @@ export default function Verify() {
         {notice ? <Banner tone="success" text={notice} /> : null}
         <TextField label="Code" value={code} onChangeText={setCode} keyboardType="number-pad" autoComplete="one-time-code" textContentType="oneTimeCode" maxLength={8} />
         {mode === 'recovery' ? (
-          <TextField label="New password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" hint="At least 8 characters." />
+          <TextField label="New password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="new-password" textContentType="newPassword" hint="At least 8 characters." />
         ) : null}
         <Button label={mode === 'recovery' ? 'Save new password' : 'Continue'} loading={busy} onPress={submit} />
         <Button label="Send a new code" variant="text" loading={resending} onPress={resend} />

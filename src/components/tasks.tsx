@@ -22,6 +22,17 @@ export const categoryOf = (c: TaskCategory) => CATEGORIES.find((x) => x.value ==
 
 type StatusLike = Pick<CalendarItem, 'kind' | 'status' | 'accepted_count' | 'helpers_needed' | 'tentative_count' | 'my_role'>;
 
+/** The status in words, for screen readers (matches StatusPill). */
+export function statusText(item: StatusLike, helperName?: string | null): string {
+  if (item.status === 'draft') return 'Draft';
+  if (item.status === 'cancelled') return 'Cancelled';
+  if (item.status === 'completed') return 'Done';
+  if (item.kind === 'event') return `${item.accepted_count} going${item.tentative_count ? `, ${item.tentative_count} maybe` : ''}`;
+  if (item.status === 'confirmed') return item.my_role === 'helper' ? 'You’re helping' : helperName && item.helpers_needed === 1 ? `${helperName} is helping` : 'All covered';
+  if (item.accepted_count > 0) return `${item.accepted_count} of ${item.helpers_needed} covered`;
+  return 'Awaiting replies';
+}
+
 /** Status shown with words and an icon, never colour alone. */
 export function StatusPill({ item, helperName }: { item: StatusLike; helperName?: string | null }) {
   const s: TaskStatus = item.status;
@@ -46,7 +57,7 @@ export function TaskRow({ item, tz, subtitle }: { item: CalendarItem; tz: string
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${item.title}, ${cat.label}, ${formatWhen(item, tz)}`}
+      accessibilityLabel={[item.title, subtitle ?? `${cat.label}, ${formatWhen(item, tz)}`, hint, statusText(item)].filter(Boolean).join('. ')}
       onPress={() => router.push(`/task/${item.id}`)}
       style={({ pressed }) => [{ flexDirection: 'row', gap: space.md, padding: space.lg, backgroundColor: pressed ? colors.cream : colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border }]}
     >
@@ -128,7 +139,8 @@ export function RequestCard({ item, tz, familyId, fromName }: { item: CalendarIt
   const cat = categoryOf(item.category);
   return (
     <View style={{ backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, padding: space.lg, gap: space.md }}>
-      <Pressable accessibilityRole="button" accessibilityLabel={`Open ${item.title}`} onPress={() => router.push(`/task/${item.id}`)} style={{ gap: 4 }}>
+      <Pressable accessibilityRole="button" accessibilityLabel={[item.title, `${item.kind === 'help' ? cat.label : 'Family event'} from ${fromName}`, formatWhen(item, tz), item.location].filter(Boolean).join('. ')}
+        accessibilityHint="Opens the details" onPress={() => router.push(`/task/${item.id}`)} style={{ gap: 4 }}>
         <Caption>{item.kind === 'help' ? cat.label : 'Family event'} · from {fromName}</Caption>
         <Strong style={{ fontSize: 19 }}>{item.title}</Strong>
         <Caption>{formatWhen(item, tz)}{item.location ? ` · ${item.location}` : ''}</Caption>
