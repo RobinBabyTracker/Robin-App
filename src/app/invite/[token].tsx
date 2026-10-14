@@ -13,11 +13,11 @@ import { space } from '@/ui/theme';
 type Preview = { state: 'valid' | 'expired' | 'revoked' | 'used' | 'declined' | 'invalid'; family_name: string | null; invited_by_name: string | null; role: string | null };
 
 const STATE_COPY: Record<Exclude<Preview['state'], 'valid'>, string> = {
-  expired: 'This invitation has expired. Ask the person who invited you for a new link.',
-  revoked: 'This invitation was cancelled. Ask for a new link if you still need one.',
-  used: 'This invitation has already been used. Each link works for one person.',
+  expired: 'This code has run out. Ask the person who invited you for a new one.',
+  revoked: 'This invitation was cancelled. Ask for a new code if you still need one.',
+  used: 'This code has already been used. Each code works for one person.',
   declined: 'This invitation was declined.',
-  invalid: 'This link isn’t a valid Robin invitation.',
+  invalid: 'We couldn’t find that code. Check it and try again, or ask for a new one.',
 };
 
 export default function InviteScreen() {
@@ -58,6 +58,7 @@ export default function InviteScreen() {
     setBusy('accept');
     try {
       const familyId = await rpc<string>('accept_invitation', { p_token: token, p_relation_label: label.trim() || null });
+      if (!familyId) throw new Error('invite_invalid');
       clearPendingInvite();
       select(familyId);
       await refetch();
@@ -91,7 +92,7 @@ export default function InviteScreen() {
       ) : preview.data?.state !== 'valid' ? (
         <View style={{ alignItems: 'center', gap: space.lg, marginTop: space.xxl }}>
           <Robin pose="pecking" size={110} />
-          <Title style={{ textAlign: 'center' }}>That invitation can't be used</Title>
+          <Title style={{ textAlign: 'center' }}>That code can’t be used</Title>
           <Voice style={{ textAlign: 'center' }}>{STATE_COPY[(preview.data?.state ?? 'invalid') as Exclude<Preview['state'], 'valid'>]}</Voice>
           <Button label="Close" variant="secondary" onPress={() => { clearPendingInvite(); close(); }} style={{ alignSelf: 'stretch' }} />
         </View>

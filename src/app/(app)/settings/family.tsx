@@ -136,7 +136,7 @@ export default function FamilySettings() {
                         <Caption>From {name(i.invited_by, 'a parent')} · expires {new Date(i.expires_at).toLocaleDateString()}</Caption>
                       </View>
                       <Button label="Cancel" small variant="danger" loading={busy === `rv:${i.id}`}
-                        onPress={() => run(`rv:${i.id}`, () => rpc('revoke_invitation', { p_invitation: i.id }), 'Invitation cancelled. That link no longer works.')} />
+                        onPress={() => run(`rv:${i.id}`, () => rpc('revoke_invitation', { p_invitation: i.id }), 'Invitation cancelled. That code no longer works.')} />
                     </View>
                   </Card>
                 ))}

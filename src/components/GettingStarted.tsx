@@ -13,7 +13,7 @@ import { colors, radius, space } from '@/ui/theme';
 type Step = { id: GuideStep; icon: IconName; title: string; hint: string; href: Href };
 
 const PARENT_STEPS: Step[] = [
-  { id: 'invite', icon: 'people', title: 'Invite your family', hint: 'Send a private link to the people who help you.', href: '/settings/invite' },
+  { id: 'invite', icon: 'people', title: 'Invite your family', hint: 'Send a short code to the people who help you.', href: '/settings/invite' },
   { id: 'ask', icon: 'calendar', title: 'Ask for help or plan an event', hint: 'Once someone has joined, ask them for a hand.', href: '/task/new' },
   { id: 'message', icon: 'chat', title: 'Say hello in Messages', hint: 'Start a chat with one person or the group.', href: '/chat/new' },
   { id: 'memory', icon: 'image', title: 'Add your first memory', hint: 'Save a favourite photo or video.', href: '/memory/new' },

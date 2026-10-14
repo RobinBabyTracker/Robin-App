@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { Share, View } from 'react-native';
-import * as Linking from 'expo-linking';
+import { Share, Text, View } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { useQueryClient } from '@tanstack/react-query';
-import { Banner, Body, Button, Caption, Card, ChoiceChip, EmptyState, Heading, Screen, Stack, Strong, TextField, Voice } from '@/ui/components';
+import { Banner, Button, Caption, Card, ChoiceChip, EmptyState, Heading, Robin, Screen, Stack, Strong, TextField, Voice } from '@/ui/components';
 import { useFamily } from '@/state/family';
 import { keys } from '@/state/queries';
 import { rpc } from '@/lib/supabase';
 import { friendlyError } from '@/lib/errors';
-import { colors, radius, space } from '@/ui/theme';
+import { formatInviteCode } from '@/lib/forms';
+import { colors, fonts, radius, space } from '@/ui/theme';
 
 const EXPIRY = [{ hours: 24, label: '1 day' }, { hours: 72, label: '3 days' }, { hours: 168, label: '1 week' }];
 
@@ -19,7 +20,8 @@ export default function Invite() {
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [link, setLink] = useState<{ url: string; expires: string } | null>(null);
+  const [invite, setInvite] = useState<{ code: string; expires: string } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   if (!isParent) return <Screen><EmptyState title="Only parents can invite people" body="Ask a parent in your family to send an invitation." /></Screen>;
 
@@ -29,7 +31,8 @@ export default function Invite() {
       const rows = await rpc<{ invitation_id: string; token: string; expires_at: string }[]>('create_invitation', {
         p_family: familyId, p_role: role, p_expires_in_hours: hours, p_note: note.trim() || null,
       });
-      setLink({ url: Linking.createURL(`invite/${rows[0].token}`), expires: rows[0].expires_at });
+      setInvite({ code: formatInviteCode(rows[0].token), expires: rows[0].expires_at });
+      setCopied(false);
       qc.invalidateQueries({ queryKey: keys.invitations(familyId) });
     } catch (e) {
       setError(friendlyError(e));
@@ -38,32 +41,53 @@ export default function Invite() {
     }
   };
 
+  const expiresOn = invite ? new Date(invite.expires).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' }) : '';
+
   const share = async () => {
-    if (!link) return;
+    if (!invite) return;
     try {
-      await Share.share({ message: `Join ${current?.name ?? 'our family'} on Robin: ${link.url}\n\nThis link works once and expires on ${new Date(link.expires).toLocaleDateString()}.` });
+      await Share.share({
+        message:
+          `Join ${current?.name ?? 'our family'} on Robin!\n\n` +
+          `Open the Robin app, tap “I have an invite code” and enter:\n\n${invite.code}\n\n` +
+          `The code works once and runs out on ${expiresOn}.`,
+      });
     } catch (e) {
-      setError(friendlyError(e, 'Sharing didn’t work. You can copy the link instead.'));
+      setError(friendlyError(e, 'Sharing didn’t work. You can copy the code instead.'));
     }
   };
 
-  if (link) {
+  const copy = async () => {
+    if (!invite) return;
+    await Clipboard.setStringAsync(invite.code);
+    setCopied(true);
+  };
+
+  if (invite) {
     return (
       <Screen>
         <Stack gap={space.lg}>
-          <Banner tone="success" text="Your invitation link is ready." />
+          {error ? <Banner tone="error" text={error} /> : null}
           <Card>
-            <Stack gap={space.md}>
-              <Heading>Send it to one person</Heading>
-              <Voice>The link works once, for one person, until {new Date(link.expires).toLocaleString()}. Treat it like a key: send it straight to them.</Voice>
-              <View style={{ padding: space.md, borderRadius: radius.sm, backgroundColor: colors.cream }}>
-                <Body selectable>{link.url}</Body>
+            <Stack gap={space.md} style={{ alignItems: 'center' }}>
+              <Robin pose="singing" size={80} />
+              <Heading style={{ textAlign: 'center' }}>Here’s their invite code</Heading>
+              <View
+                accessible
+                accessibilityLabel={`Invite code ${invite.code.split('').join(' ')}`}
+                style={{ paddingVertical: space.lg, paddingHorizontal: space.xl, borderRadius: radius.md, backgroundColor: colors.cream, alignSelf: 'stretch', alignItems: 'center' }}
+              >
+                <Text selectable maxFontSizeMultiplier={1.4} style={{ fontFamily: fonts.bold, fontSize: 34, letterSpacing: 4, color: colors.text }}>{invite.code}</Text>
               </View>
-              <Caption>We only show this link once. If it's lost, cancel it from Family members and make a new one.</Caption>
+              <Voice style={{ textAlign: 'center' }}>
+                They open Robin, tap “I have an invite code” and type this in. It works once, until {expiresOn}.
+              </Voice>
             </Stack>
           </Card>
-          <Button label="Share link" icon="share" onPress={share} />
-          <Button label="Invite someone else" variant="secondary" onPress={() => { setLink(null); setNote(''); }} />
+          <Button label="Share code" icon="share" onPress={share} />
+          <Button label={copied ? 'Copied' : 'Copy code'} icon={copied ? 'check' : 'link'} variant="secondary" onPress={copy} />
+          <Caption style={{ textAlign: 'center' }}>We only show this code once. If it’s lost, cancel it from Family members and make a new one.</Caption>
+          <Button label="Invite someone else" variant="text" onPress={() => { setInvite(null); setNote(''); }} />
         </Stack>
       </Screen>
     );
@@ -81,14 +105,14 @@ export default function Invite() {
               <ChoiceChip label="Helper: replies to requests, chats, sees memories" selected={role === 'helper'} onPress={() => setRole('helper')} />
               <ChoiceChip label="Parent: can also ask for help and invite" selected={role === 'parent'} onPress={() => setRole('parent')} />
             </View>
-            <Strong>Link expires after</Strong>
+            <Strong>Code runs out after</Strong>
             <View style={{ flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' }}>
               {EXPIRY.map((e) => <ChoiceChip key={e.hours} label={e.label} selected={hours === e.hours} onPress={() => setHours(e.hours)} />)}
             </View>
             <TextField label="Who's it for? (optional, just for you)" value={note} onChangeText={setNote} maxLength={80} placeholder="Nana" />
           </Stack>
         </Card>
-        <Button label="Create invitation link" loading={busy} onPress={create} />
+        <Button label="Create invite code" loading={busy} onPress={create} />
       </Stack>
     </Screen>
   );

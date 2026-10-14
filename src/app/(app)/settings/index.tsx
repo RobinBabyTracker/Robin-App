@@ -31,7 +31,7 @@ export default function SettingsHome() {
         <Section title={current ? `${current.name} · you're ${ROLE_LABEL[current.role].toLowerCase()}` : 'Family'}>
           <Card style={{ padding: 0 }}>
             <ListRow title="Family members" subtitle={isParent ? 'Roles, removing people, invitations' : 'Who’s in your family'} left={<Icon name="people" />} onPress={() => router.push('/settings/family')} />
-            {isParent ? <ListRow title="Invite someone" subtitle="Send a private, one-time link" left={<Icon name="plus" />} onPress={() => router.push('/settings/invite')} /> : null}
+            {isParent ? <ListRow title="Invite someone" subtitle="Send a short, one-time code" left={<Icon name="plus" />} onPress={() => router.push('/settings/invite')} /> : null}
             <ListRow title="Your families" subtitle={families.length > 1 ? `${families.length} families · switch, create or join` : 'Create or join another family'} left={<Icon name="home" />} onPress={() => router.push('/settings/families')} last />
           </Card>
         </Section>

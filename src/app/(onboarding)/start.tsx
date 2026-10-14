@@ -34,8 +34,8 @@ export default function Start() {
         <Card>
           <Stack gap={space.md}>
             <Heading>Been invited?</Heading>
-            <Voice>Open the link you were sent, or paste it here.</Voice>
-            <Button label="I have an invite link" variant="secondary" onPress={() => router.push('/join')} />
+            <Voice>If someone sent you a code, you can join their family.</Voice>
+            <Button label="I have an invite code" variant="secondary" onPress={() => router.push('/join')} />
           </Stack>
         </Card>
         <Button label="Sign out" variant="text" onPress={signOut} />

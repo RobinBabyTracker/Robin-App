@@ -6,7 +6,7 @@
 
 - **Accounts:** sign up, sign in (password or emailed 6-digit code), password reset by code, sign out, profile name and time zone. A profile is created automatically, and nothing about children is collected.
 - **Family groups:** create a family; owner, parent and helper roles; rename the family; change roles (owners only); remove members (owners remove parents and helpers, parents remove helpers, nobody removes an owner); leave a family. The last owner can't leave a family that still has other members. A sole member leaving deletes the family.
-- **Invitations:** one-time links that expire after 1 hour to 14 days. Only a SHA-256 hash of each token is stored, and the token can't be read back. Invitations can be revoked and declined, and each link works once. The link previews who invited you before you join. An invite opened before sign-up is held until you finish signing up.
+- **Invitations:** short one-time codes like K7PQ-2MXR (8 characters with no look-alikes) that expire after 1 hour to 14 days. Only a SHA-256 hash of each code is stored, and the code can't be read back. Each person gets 10 wrong codes an hour, so codes can't be guessed. Codes can be revoked and declined, and each works once. Entering a code previews who invited you before you join. A code entered before sign-up is held until you finish signing up. Older long links still work.
 - **Requests and events:**
   - Parents can create, draft, send, edit, cancel and complete them.
   - Each one supports a category, title, details, location, notes, links, all-day or timed slots, reply-by times, everyone or chosen people, and how many helpers are needed.

@@ -9,14 +9,14 @@ export function JoinForm() {
   const [error, setError] = useState<string | null>(null);
   const go = () => {
     const token = extractInviteToken(value);
-    if (!token) { setError('That doesn’t look like a Robin invite link. Copy the whole link and try again.'); return; }
+    if (!token) { setError('That doesn’t look like an invite code. It’s 8 letters and numbers, like K7PQ-2MXR.'); return; }
     setError(null);
     router.push(`/invite/${token}`);
   };
   return (
     <Stack gap={space.lg}>
-      <Voice>Paste the invite link someone sent you. Each link works once and expires after a few days.</Voice>
-      <TextField label="Invite link" value={value} onChangeText={setValue} autoCapitalize="none" autoCorrect={false} placeholder="robin://invite/…" error={error} />
+      <Voice>Type in the invite code you were sent. It’s 8 letters and numbers, like K7PQ-2MXR. You can paste the whole message too.</Voice>
+      <TextField label="Invite code" value={value} onChangeText={setValue} autoCapitalize="characters" autoCorrect={false} autoComplete="off" placeholder="K7PQ-2MXR" error={error} onSubmitEditing={go} returnKeyType="go" />
       <Button label="Continue" onPress={go} />
     </Stack>
   );

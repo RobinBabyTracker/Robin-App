@@ -4,7 +4,7 @@ import {
   zonedToUtc, zonedParts, allDayRange, itemDateKeys, formatWhen, formatTime, monthGrid, startOfWeek,
   dayRangeUtc, otherZoneHint, addMonths, relativeDayLabel,
 } from './time.ts';
-import { validateTask, extractInviteToken, checkMedia, guessMime, validateEmail, type TaskDraft } from './forms.ts';
+import { validateTask, extractInviteToken, formatInviteCode, checkMedia, guessMime, validateEmail, type TaskDraft } from './forms.ts';
 import { friendlyError, errorCode } from './errors.ts';
 
 test('zonedToUtc: Brisbane has no daylight saving', () => {
@@ -103,6 +103,16 @@ test('invite links and tokens', () => {
   assert.equal(extractInviteToken(''), null);
 });
 
+test('short invite codes', () => {
+  assert.equal(extractInviteToken('K7PQ-2MXR'), 'K7PQ2MXR');
+  assert.equal(extractInviteToken(' k7pq 2mxr '), 'K7PQ2MXR');
+  assert.equal(extractInviteToken('robin://invite/K7PQ2MXR'), 'K7PQ2MXR');
+  assert.equal(extractInviteToken('exp://silver-pancake-8081.app.github.dev/--/invite/K7PQ2MXR'), 'K7PQ2MXR');
+  assert.equal(extractInviteToken('Join The Parkers on Robin! Open Robin, tap “I have an invite code” and enter K7PQ-2MXR. It works once.'), 'K7PQ2MXR');
+  assert.equal(extractInviteToken('K7PQ-2MX'), null);
+  assert.equal(formatInviteCode('K7PQ2MXR'), 'K7PQ-2MXR');
+});
+
 test('media checks', () => {
   assert.equal(checkMedia('photo', 'image/jpeg', 1000), null);
   assert.ok(checkMedia('photo', 'image/gif', 1000));
@@ -121,7 +131,7 @@ test('email validation', () => {
 
 test('friendly errors', () => {
   assert.equal(errorCode({ message: 'invite_expired' }), 'invite_expired');
-  assert.match(friendlyError({ message: 'invite_expired' }), /expired/);
+  assert.match(friendlyError({ message: 'invite_expired' }), /run out/);
   assert.match(friendlyError({ message: 'TypeError: Network request failed' }), /offline/);
   assert.match(friendlyError({ message: 'Invalid login credentials' }), /don’t match/);
   assert.equal(friendlyError({ message: 'weird' }), 'Something went wrong. Please try again.');

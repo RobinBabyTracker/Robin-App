@@ -45,7 +45,7 @@ test('clients cannot write to tables directly', async () => {
 test('invitation lifecycle: preview, accept once, no reuse', async () => {
   const { familyId, owner } = await family(world, 0);
   const [inv] = await owner.rpc('create_invitation', { p_family: familyId, p_role: 'helper' });
-  assert.ok(inv.token.length >= 40, 'token should be long and random');
+  assert.match(inv.token, /^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{8}$/, 'a short code with no look-alike characters');
 
   const grandma = await world.createUser('Grandma');
   const [pv] = await grandma.rpc('preview_invitation', { p_token: inv.token });
@@ -84,8 +84,46 @@ test('expired, revoked, declined and made-up invitations are refused', async () 
   await u.rpc('decline_invitation', { p_token: declined.token });
   await rejects(u.rpc('accept_invitation', { p_token: declined.token }), 'invite_declined');
 
-  await rejects(u.rpc('accept_invitation', { p_token: 'not-a-real-token' }), 'invite_invalid');
+  // A made-up code returns null (so the wrong guess is still counted).
+  assert.equal(await u.rpcValue('accept_invitation', { p_token: 'not-a-real-token' }), null);
   assert.equal((await u.q('select * from public.family_members where family_id = $1', [familyId])).length, 0);
+});
+
+test('codes are forgiving to type: any case, spaces and dashes', async () => {
+  const { familyId, owner } = await family(world, 0);
+  const [inv] = await owner.rpc('create_invitation', { p_family: familyId });
+  const typed = ` ${inv.token.slice(0, 4).toLowerCase()} - ${inv.token.slice(4)} `;
+  const u = await world.createUser('Uncle Tom');
+  const [pv] = await u.rpc('preview_invitation', { p_token: typed });
+  assert.equal(pv.state, 'valid');
+  assert.equal(await u.rpcValue('accept_invitation', { p_token: typed }), familyId);
+});
+
+test('older long invite links still work', async () => {
+  const { familyId, owner } = await family(world, 0);
+  const admin = await world.admin();
+  const legacy = 'Ab3_xY-' + 'q'.repeat(36);
+  await admin.query(
+    "insert into public.invitations (family_id, invited_by, token_hash, expires_at) values ($1, $2, encode(extensions.digest($3, 'sha256'), 'hex'), now() + interval '1 day')",
+    [familyId, owner.id, legacy]);
+  const u = await world.createUser('Old Link');
+  assert.equal(await u.rpcValue('accept_invitation', { p_token: legacy }), familyId);
+});
+
+test('guessing codes is cut off after 10 wrong tries an hour', async () => {
+  const { familyId, owner } = await family(world, 0);
+  const [inv] = await owner.rpc('create_invitation', { p_family: familyId });
+  const guesser = await world.createUser('Guesser');
+  for (let i = 0; i < 6; i++) await guesser.rpc('preview_invitation', { p_token: `WRONG${i}AA` });
+  for (let i = 0; i < 4; i++) assert.equal(await guesser.rpcValue('accept_invitation', { p_token: `NOPE${i}AAA` }), null);
+  // Even the right code is refused now, so guessing can't continue.
+  await rejects(guesser.rpc('preview_invitation', { p_token: inv.token }), 'too_many_attempts');
+  await rejects(guesser.rpc('accept_invitation', { p_token: inv.token }), 'too_many_attempts');
+  // Other people are unaffected.
+  const friend = await world.createUser('Friend');
+  assert.equal(await friend.rpcValue('accept_invitation', { p_token: inv.token }), familyId);
+  // Nobody can read or clear the attempt log.
+  await rejects(guesser.q('delete from private.invite_attempts'), 'permission denied');
 });
 
 test('only parents can invite, and nobody can read token hashes', async () => {

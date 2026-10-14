@@ -26,7 +26,7 @@ export default function Families() {
           ))}
         </Card>
         <Section title="Join another family">
-          <Button label="I have an invite link" variant="secondary" onPress={() => router.push('/settings/join')} />
+          <Button label="I have an invite code" variant="secondary" onPress={() => router.push('/settings/join')} />
         </Section>
         <Section title="Start a new family">
           <Card>

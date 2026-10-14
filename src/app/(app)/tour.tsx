@@ -16,7 +16,7 @@ const PARENT_SLIDES: Slide[] = [
   { pose: 'singing', title: 'Hello, I’m Robin', body: 'I’m here to help your family help you. Here’s how it all works. It only takes a minute.' },
   {
     pose: 'flying', title: 'First, invite your people',
-    body: 'Robin works best once your family is in it: grandparents, friends, a sitter you trust. Send each of them a private link, and once they’ve joined you can ask them for help.',
+    body: 'Robin works best once your family is in it: grandparents, friends, a sitter you trust. Send each of them a short invite code, and once they’ve joined you can ask them for help.',
     where: 'Tap your picture at the top right, then Invite someone.',
   },
   {

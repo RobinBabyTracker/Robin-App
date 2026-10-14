@@ -68,14 +68,27 @@ export function validateDisplayName(name: string): string | null {
   return null;
 }
 
-/** Accepts a full invite link (robin://invite/TOKEN or https://…/invite/TOKEN) or a bare token. */
+/**
+ * Pulls an invite code out of whatever someone pasted or typed: a short code in
+ * any case, with or without spaces and dashes ("k7pq 2mxr"), a robin:// or
+ * Expo link, or an older long token.
+ */
 export function extractInviteToken(input: string): string | null {
   const v = input.trim();
   if (!v) return null;
-  const m = v.match(/invite\/([A-Za-z0-9_-]{20,})/);
-  if (m) return m[1];
-  if (/^[A-Za-z0-9_-]{20,}$/.test(v)) return v;
-  return null;
+  const link = v.match(/invite\/([A-Za-z0-9_-]+)/);
+  const raw = link ? link[1] : v;
+  if (/^[A-Za-z0-9_-]{20,}$/.test(raw)) return raw; // older long token: keep exactly
+  const code = raw.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  if (/^[A-Z0-9]{8}$/.test(code)) return code;
+  // Someone pasted the whole message: find the code written as XXXX-XXXX.
+  const inText = v.match(/(?:^|[^A-Za-z0-9])([A-Za-z0-9]{4})-([A-Za-z0-9]{4})(?![A-Za-z0-9])/);
+  return inText ? (inText[1] + inText[2]).toUpperCase() : null;
+}
+
+/** Shows a code as two easy groups: K7PQ-2MXR. */
+export function formatInviteCode(code: string): string {
+  return code.length === 8 ? `${code.slice(0, 4)}-${code.slice(4)}` : code;
 }
 
 export const MEDIA_RULES = {
