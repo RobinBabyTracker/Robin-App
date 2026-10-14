@@ -24,7 +24,10 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "permissions": ["android.permission.POST_NOTIFICATIONS"]
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -39,7 +42,11 @@
       "@react-native-community/datetimepicker",
       [
         "expo-splash-screen",
-        { "backgroundColor": "#FFD2D9", "image": "./assets/splash-icon.png", "imageWidth": 160 }
+        {
+          "backgroundColor": "#FFD2D9",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160
+        }
       ],
       [
         "expo-image-picker",
@@ -51,13 +58,17 @@
       ],
       [
         "expo-notifications",
-        { "color": "#741D28" }
+        {
+          "color": "#741D28"
+        }
       ]
     ],
     "extra": {
       "eas": {
-        "projectId": ""
-      }
-    }
+        "projectId": "9042bd39-33bc-417c-a94d-14e20f2244b7"
+      },
+      "router": {}
+    },
+    "owner": "robinbabytracker"
   }
 }
