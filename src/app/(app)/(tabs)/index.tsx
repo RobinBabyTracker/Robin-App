@@ -3,6 +3,7 @@ import { Pressable, RefreshControl, View } from 'react-native';
 import { router } from 'expo-router';
 import { AppHeader } from '@/components/AppHeader';
 import { AskForHelpButton } from '@/components/AskForHelpButton';
+import { GettingStarted } from '@/components/GettingStarted';
 import { RequestCard, TaskRow } from '@/components/tasks';
 import { EmptyState, ErrorState, Loading, RobinNote, Screen, Section, Stack, Strong } from '@/ui/components';
 import { Icon } from '@/ui/Icon';
@@ -51,6 +52,7 @@ export default function Home() {
         {cal.isLoading ? <Loading /> : cal.error ? <ErrorState error={cal.error} onRetry={() => cal.refetch()} /> : (
           <>
             <RobinNote text={robinSays(needsReply, upcoming, helping, name)} />
+            <GettingStarted items={cal.data ?? []} />
 
             {needsReply.length ? (
               <Section title={`Needs your reply · ${needsReply.length}`}>

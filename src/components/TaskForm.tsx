@@ -1,7 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
+import { router } from 'expo-router';
 import * as Crypto from 'expo-crypto';
-import { Banner, Body, Button, Caption, Card, ChoiceChip, Heading, IconButton, Segmented, Stack, Strong, TextField, ToggleRow, Avatar } from '@/ui/components';
+import { Banner, Body, Button, Caption, Card, ChoiceChip, Heading, IconButton, Segmented, Stack, Strong, TextField, ToggleRow, RobinNote } from '@/ui/components';
 import { DateTimeField } from './DateTimeField';
 import { CATEGORIES } from './tasks';
 import { useAuth } from '@/state/auth';
@@ -117,8 +118,18 @@ export function TaskForm({ initial, presetDate, submitting, serverError, onSubmi
     setChosen((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
   };
 
+  const nobodyToAsk = !editing && !members.isLoading && others.length === 0;
+
   return (
     <Stack gap={space.lg}>
+      {nobodyToAsk ? (
+        <RobinNote
+          pose="flying"
+          text="It’s just you in the family so far. Invite someone first, then you can ask them once they’ve joined."
+          action={{ label: 'Invite someone', icon: 'plus', onPress: () => router.push('/settings/invite') }}
+        />
+      ) : null}
+
       {!editing ? (
         <Segmented
           label="What would you like to do?"
@@ -180,7 +191,7 @@ export function TaskForm({ initial, presetDate, submitting, serverError, onSubmi
                   );
                 })}
               </View>
-            ) : <Body>There's no one else in your family yet. Invite someone from You & family first.</Body>
+            ) : <Body>There’s no one else in your family yet. Invite someone first, using the button at the top.</Body>
           ) : <Caption>Everyone in your family except you will be asked{kind === 'help' ? '. The first to say yes gets it' : ''}.</Caption>}
           {errors.invitees ? <Caption style={{ color: colors.danger }}>{errors.invitees}</Caption> : null}
 
@@ -219,12 +230,6 @@ export function TaskForm({ initial, presetDate, submitting, serverError, onSubmi
           <Button label="Save as draft" variant="secondary" loading={submitting === 'draft'} disabled={submitting === 'send'} onPress={() => submit('draft')} />
         </>
       )}
-      {!editing && everyone && others.length === 0 && !members.isLoading ? (
-        <View style={{ flexDirection: 'row', gap: space.sm, alignItems: 'center' }}>
-          <Avatar name="?" size={28} tone="cream" />
-          <Caption style={{ flex: 1 }}>You're the only one here so far. Invite family from You & family so there's someone to ask.</Caption>
-        </View>
-      ) : null}
     </Stack>
   );
 }

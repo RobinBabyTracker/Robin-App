@@ -1,15 +1,19 @@
-import { router } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
 import { Avatar, Button, Caption, Card, ListRow, Screen, Section, Stack } from '@/ui/components';
 import { Icon } from '@/ui/Icon';
 import { useAuth } from '@/state/auth';
 import { useFamily } from '@/state/family';
+import { guide } from '@/lib/guide';
 import { space } from '@/ui/theme';
 
 const ROLE_LABEL = { owner: 'Owner', parent: 'Parent', helper: 'Helper' } as const;
 
 export default function SettingsHome() {
-  const { profile, timezone, signOut } = useAuth();
+  const { profile, timezone, signOut, userId } = useAuth();
   const { current, isParent, families } = useFamily();
+  const [checklistHidden, setChecklistHidden] = useState(false);
+  useFocusEffect(useCallback(() => { if (userId) setChecklistHidden(guide.checklistHidden(userId)); }, [userId]));
 
   return (
     <Screen>
@@ -29,6 +33,21 @@ export default function SettingsHome() {
             <ListRow title="Family members" subtitle={isParent ? 'Roles, removing people, invitations' : 'Who’s in your family'} left={<Icon name="people" />} onPress={() => router.push('/settings/family')} />
             {isParent ? <ListRow title="Invite someone" subtitle="Send a private, one-time link" left={<Icon name="plus" />} onPress={() => router.push('/settings/invite')} /> : null}
             <ListRow title="Your families" subtitle={families.length > 1 ? `${families.length} families · switch, create or join` : 'Create or join another family'} left={<Icon name="home" />} onPress={() => router.push('/settings/families')} last />
+          </Card>
+        </Section>
+
+        <Section title="Help">
+          <Card style={{ padding: 0 }}>
+            <ListRow title="How Robin works" subtitle="Watch the welcome tour again" left={<Icon name="star" />} onPress={() => router.push('/tour')} last={!checklistHidden} />
+            {checklistHidden && userId ? (
+              <ListRow
+                title="Show getting started"
+                subtitle="Put the checklist back on Home"
+                left={<Icon name="checkCircle" />}
+                onPress={() => { guide.setChecklistHidden(userId, false); setChecklistHidden(false); router.navigate('/'); }}
+                last
+              />
+            ) : null}
           </Card>
         </Section>
 

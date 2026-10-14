@@ -5,6 +5,7 @@ import { useFamily } from '@/state/family';
 import { useRealtime } from '@/state/realtime';
 import { getPendingInvite } from '@/lib/pendingInvite';
 import { onNotificationTap, registerForPush } from '@/lib/push';
+import { guide } from '@/lib/guide';
 import { colors, fonts } from '@/ui/theme';
 
 export default function AppLayout() {
@@ -14,15 +15,22 @@ export default function AppLayout() {
 
   useEffect(() => {
     const token = getPendingInvite();
+    let tourTimer: ReturnType<typeof setTimeout> | undefined;
     if (token) router.push(`/invite/${token}`);
+    // First visit: Robin shows a short welcome tour once Home has appeared.
+    else if (userId && !guide.tourSeen(userId)) tourTimer = setTimeout(() => router.push('/tour'), 400);
     // Push is optional; the in-app notification centre works without it.
     registerForPush().catch(() => {});
     // Tapping a push notification opens the right screen.
-    return onNotificationTap((d) => {
+    const stopTaps = onNotificationTap((d) => {
       if (d.conversationId) router.push(`/chat/${d.conversationId}`);
       else if (d.taskId) router.push(`/task/${d.taskId}`);
       else router.push('/notifications');
     });
+    return () => {
+      if (tourTimer) clearTimeout(tourTimer);
+      stopTaps();
+    };
   }, []);
 
   return (
@@ -37,6 +45,7 @@ export default function AppLayout() {
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="tour" options={{ headerShown: false, presentation: 'fullScreenModal', animation: 'fade' }} />
       <Stack.Screen name="task/new" options={{ title: 'Ask for help', presentation: 'modal' }} />
       <Stack.Screen name="task/[id]/index" options={{ title: '' }} />
       <Stack.Screen name="task/[id]/edit" options={{ title: 'Edit', presentation: 'modal' }} />

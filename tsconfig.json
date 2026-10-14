@@ -4,8 +4,20 @@
     "strict": true,
     "noUncheckedIndexedAccess": false,
     "allowImportingTsExtensions": true,
-    "paths": { "@/*": ["./src/*"] }
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
-  "exclude": ["node_modules", "supabase/functions", "supabase/tests", "**/*.test.ts"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "supabase/functions",
+    "supabase/tests",
+    "**/*.test.ts"
+  ]
 }

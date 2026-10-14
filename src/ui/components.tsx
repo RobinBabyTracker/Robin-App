@@ -306,14 +306,17 @@ export function Robin({ pose = 'standing', size = 64 }: { pose?: RobinPose; size
   );
 }
 
-export function RobinNote({ text, pose = 'standing', chirp }: { text: string; pose?: RobinPose; chirp?: boolean }) {
+export function RobinNote({ text, pose = 'standing', chirp, action }: { text: string; pose?: RobinPose; chirp?: boolean; action?: { label: string; onPress: () => void; icon?: IconName } }) {
   return (
     <View style={[styles.card, { backgroundColor: colors.cream, borderColor: colors.cream, flexDirection: 'row', gap: space.md, alignItems: 'center' }]}>
       <Robin pose={pose} size={52} />
-      <Voice style={{ flex: 1 }}>
-        {text}
-        {chirp ? <Text style={{ fontSize: 11 }}> *chirp*</Text> : null}
-      </Voice>
+      <View style={{ flex: 1, gap: space.sm }}>
+        <Voice>
+          {text}
+          {chirp ? <Text style={{ fontSize: 11 }}> *chirp*</Text> : null}
+        </Voice>
+        {action ? <Button label={action.label} icon={action.icon} small onPress={action.onPress} style={{ alignSelf: 'flex-start' }} /> : null}
+      </View>
     </View>
   );
 }

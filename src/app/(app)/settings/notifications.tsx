@@ -21,7 +21,7 @@ const ROWS: { key: keyof NotificationPrefs; label: string; hint: string }[] = [
 const PUSH_COPY: Record<PushResult, string> = {
   registered: 'Push notifications are on for this device.',
   denied: 'Notifications are turned off for Robin in your phone’s settings.',
-  unsupported: 'Push notifications need a real phone (not a simulator).',
+  unsupported: 'Push notifications need the full Robin app. They don\u2019t work in Expo Go or a simulator, but everything still appears in the notification centre.',
   not_configured: 'Push notifications aren’t set up in this build yet. You’ll still see everything in the notification centre.',
   error: 'We couldn’t turn on push notifications. Please try again.',
 };
