@@ -129,7 +129,7 @@ export function TaskForm({ initial, presetDate, submitting, serverError, onSubmi
     <Stack gap={space.lg}>
       {nobodyToAsk ? (
         <RobinNote
-          pose="flying"
+         
           text="It’s just you in the family so far. Invite someone first, then you can ask them once they’ve joined."
           action={{ label: 'Invite someone', icon: 'plus', onPress: () => router.push('/settings/invite') }}
         />

@@ -27,7 +27,7 @@ export default function Welcome() {
   return (
     <Screen edges={['top', 'left', 'right', 'bottom']}>
       <View style={{ alignItems: 'center', marginTop: space.xxl, gap: space.lg }}>
-        <Robin pose="singing" size={160} />
+        <Robin size={160} />
         <Display style={{ textAlign: 'center' }}>Robin</Display>
         <Voice style={{ textAlign: 'center', fontSize: 20, lineHeight: 28 }}>
           No matter what parenthood throws at you, we&apos;ve got you.

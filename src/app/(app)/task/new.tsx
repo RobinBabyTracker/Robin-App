@@ -40,5 +40,5 @@ export default function NewTask() {
 }
 
 function ErrorOnlyParents() {
-  return <EmptyState pose="pecking" title="Only parents can ask for help" body="Parents in this family can create requests and events. You'll see the ones you're asked to help with." />;
+  return <EmptyState title="Only parents can ask for help" body="Parents in this family can create requests and events. You'll see the ones you're asked to help with." />;
 }

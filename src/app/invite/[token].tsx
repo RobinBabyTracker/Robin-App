@@ -44,7 +44,7 @@ export default function InviteScreen() {
     return (
       <Screen edges={['top', 'left', 'right', 'bottom']}>
         <View style={{ alignItems: 'center', gap: space.lg, marginTop: space.xxl }}>
-          <Robin pose="flying" size={120} />
+          <Robin size={120} />
           <Title style={{ textAlign: 'center' }}>You've been invited</Title>
           <Voice style={{ textAlign: 'center' }}>Sign in or create an account and we'll take you straight to your invitation.</Voice>
           <Button label="Continue" onPress={() => router.replace('/welcome')} style={{ alignSelf: 'stretch' }} />
@@ -91,7 +91,7 @@ export default function InviteScreen() {
         <ErrorState error={preview.error} onRetry={() => preview.refetch()} />
       ) : preview.data?.state !== 'valid' ? (
         <View style={{ alignItems: 'center', gap: space.lg, marginTop: space.xxl }}>
-          <Robin pose="pecking" size={110} />
+          <Robin size={110} />
           <Title style={{ textAlign: 'center' }}>That code can’t be used</Title>
           <Voice style={{ textAlign: 'center' }}>{STATE_COPY[(preview.data?.state ?? 'invalid') as Exclude<Preview['state'], 'valid'>]}</Voice>
           <Button label="Close" variant="secondary" onPress={() => { clearPendingInvite(); close(); }} style={{ alignSelf: 'stretch' }} />
@@ -99,7 +99,7 @@ export default function InviteScreen() {
       ) : (
         <Stack gap={space.lg} style={{ marginTop: space.xl }}>
           <View style={{ alignItems: 'center', gap: space.md }}>
-            <Robin pose="singing" size={120} />
+            <Robin size={120} />
             <Title style={{ textAlign: 'center' }}>Join {preview.data.family_name}?</Title>
             <Voice style={{ textAlign: 'center' }}>
               {preview.data.invited_by_name} invited you to their family on Robin

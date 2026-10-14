@@ -82,7 +82,7 @@ export function GettingStarted({ items }: { items: CalendarItem[] }) {
     <Card tone="cream" style={{ marginTop: space.lg }}>
       <Stack gap={space.md}>
         <View style={{ flexDirection: 'row', gap: space.md, alignItems: 'center' }}>
-          <Robin pose={allDone ? 'singing' : 'flying'} size={52} />
+          <Robin size={52} />
           <View style={{ flex: 1, gap: 2 }}>
             <Strong accessibilityRole="header">{allDone ? 'You’re all set up' : 'Getting started'}</Strong>
             <Voice style={{ fontSize: 15, lineHeight: 21 }}>

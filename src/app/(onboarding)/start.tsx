@@ -18,7 +18,7 @@ export default function Start() {
   return (
     <Screen edges={['top', 'left', 'right']}>
       <View style={{ alignItems: 'center', gap: space.md, marginTop: space.xl }}>
-        <Robin pose="standing" size={110} />
+        <Robin size={110} />
         <Title style={{ textAlign: 'center' }}>Hello{profile ? `, ${profile.display_name}` : ''}!</Title>
         <Voice style={{ textAlign: 'center' }}>
           Robin works around a private family group. Only people you invite can see what's inside.

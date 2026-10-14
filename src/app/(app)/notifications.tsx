@@ -79,7 +79,7 @@ export default function Notifications() {
             </Pressable>
           ))
         ) : (
-          <EmptyState pose="standing" title="You're all caught up" body="Requests, replies and changes will show up here." />
+          <EmptyState title="You're all caught up" body="Requests, replies and changes will show up here." />
         )}
       </Stack>
     </Screen>

@@ -71,7 +71,7 @@ export default function Invite() {
           {error ? <Banner tone="error" text={error} /> : null}
           <Card>
             <Stack gap={space.md} style={{ alignItems: 'center' }}>
-              <Robin pose="singing" size={80} />
+              <Robin size={80} />
               <Heading style={{ textAlign: 'center' }}>Here’s their invite code</Heading>
               <View
                 accessible

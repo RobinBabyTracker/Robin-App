@@ -9,7 +9,7 @@ import { SvgXml } from 'react-native-svg';
 import { HeaderHeightContext } from 'expo-router/react-navigation';
 import { colors, radius, space, touch, type, fonts } from './theme';
 import { Icon, type IconName } from './Icon';
-import { ROBIN_FLYING, ROBIN_PECKING, ROBIN_SINGING, ROBIN_STANDING } from './robinArt';
+import { ROBIN } from './robinArt';
 import { friendlyError } from '@/lib/errors';
 
 // ---------------------------------------------------------------------------
@@ -314,21 +314,19 @@ export function Banner({ text, tone = 'info', action }: { text: string; tone?: '
   );
 }
 
-const POSES = { standing: ROBIN_STANDING, singing: ROBIN_SINGING, pecking: ROBIN_PECKING, flying: ROBIN_FLYING };
-export type RobinPose = keyof typeof POSES;
-
-export function Robin({ pose = 'standing', size = 64 }: { pose?: RobinPose; size?: number }) {
+/** Robin, the one mascot used throughout the app. */
+export function Robin({ size = 64 }: { size?: number }) {
   return (
     <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: size, height: size }}>
-      <SvgXml xml={POSES[pose]} width={size} height={size} />
+      <SvgXml xml={ROBIN} width={size} height={size} />
     </View>
   );
 }
 
-export function RobinNote({ text, pose = 'standing', chirp, action }: { text: string; pose?: RobinPose; chirp?: boolean; action?: { label: string; onPress: () => void; icon?: IconName } }) {
+export function RobinNote({ text, chirp, action }: { text: string; chirp?: boolean; action?: { label: string; onPress: () => void; icon?: IconName } }) {
   return (
     <View style={[styles.card, { backgroundColor: colors.cream, borderColor: colors.cream, flexDirection: 'row', gap: space.md, alignItems: 'center' }]}>
-      <Robin pose={pose} size={52} />
+      <Robin size={52} />
       <View style={{ flex: 1, gap: space.sm }}>
         <Voice>
           {text}
@@ -340,10 +338,10 @@ export function RobinNote({ text, pose = 'standing', chirp, action }: { text: st
   );
 }
 
-export function EmptyState({ title, body, pose = 'pecking', action }: { title: string; body?: string; pose?: RobinPose; action?: { label: string; onPress: () => void; icon?: IconName } }) {
+export function EmptyState({ title, body, action }: { title: string; body?: string; action?: { label: string; onPress: () => void; icon?: IconName } }) {
   return (
     <View style={{ alignItems: 'center', gap: space.md, paddingVertical: space.xxl, paddingHorizontal: space.lg }}>
-      <Robin pose={pose} size={96} />
+      <Robin size={96} />
       <Heading style={{ textAlign: 'center' }}>{title}</Heading>
       {body ? <Voice style={{ textAlign: 'center', color: colors.textSecondary }}>{body}</Voice> : null}
       {action ? <Button label={action.label} icon={action.icon} onPress={action.onPress} style={{ marginTop: space.sm }} /> : null}
@@ -354,7 +352,7 @@ export function EmptyState({ title, body, pose = 'pecking', action }: { title: s
 export function ErrorState({ error, onRetry, title = 'That didn’t load' }: { error: unknown; onRetry?: () => void; title?: string }) {
   return (
     <View style={{ alignItems: 'center', gap: space.md, paddingVertical: space.xxl }} accessibilityRole="alert">
-      <Robin pose="pecking" size={80} />
+      <Robin size={80} />
       <Heading style={{ textAlign: 'center' }}>{title}</Heading>
       <Body style={{ textAlign: 'center', color: colors.textSecondary }}>{friendlyError(error)}</Body>
       {onRetry ? <Button label="Try again" icon="refresh" variant="secondary" onPress={onRetry} /> : null}

@@ -132,7 +132,7 @@ export default function CalendarScreen() {
               {mode === 'week' ? <LaterThisWeek days={days} selected={selected} byDay={byDay} tz={timezone} /> : null}
               {!visible.length ? (
                 <EmptyState
-                  pose="pecking"
+                 
                   title={scope === 'mine' ? 'Your calendar is clear' : 'Nothing planned for the family'}
                   body={isParent ? 'Tap Ask for help to plan something or ask for a hand.' : 'Requests and events you’re part of will appear here.'}
                 />

@@ -145,7 +145,7 @@ export default function Chat() {
       {!all.length && !outbox.length ? (
         // Shown outside the list: an inverted list would draw it upside down or mirrored.
         <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end' }} keyboardShouldPersistTaps="handled">
-          <EmptyState pose="singing" title="Say hello" body="Messages and photos here are only seen by people in this chat." />
+          <EmptyState title="Say hello" body="Messages and photos here are only seen by people in this chat." />
         </ScrollView>
       ) : (
       <FlatList

@@ -61,7 +61,7 @@ export default function Memories() {
             </View>
           )}
           ListEmptyComponent={
-            <EmptyState pose="singing" title="Your family's memories live here" body="Add photos and videos, or save them from a chat. Only your family can see them." />
+            <EmptyState title="Your family's memories live here" body="Add photos and videos, or save them from a chat. Only your family can see them." />
           }
           ListFooterComponent={q.isFetchingNextPage ? <ActivityIndicator color={colors.primary} /> : null}
           stickySectionHeadersEnabled

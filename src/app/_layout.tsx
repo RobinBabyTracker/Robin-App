@@ -89,7 +89,7 @@ function NotConfigured() {
   return (
     <Screen edges={['top', 'left', 'right', 'bottom']}>
       <View style={{ alignItems: 'center', gap: 16, marginTop: 48 }}>
-        <Robin pose="pecking" size={120} />
+        <Robin size={120} />
         <Title>Robin isn't connected yet</Title>
         <Voice style={{ textAlign: 'center' }}>
           Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY to a .env file, then restart the app.

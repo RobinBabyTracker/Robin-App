@@ -82,7 +82,7 @@ export default function Messages() {
           ) : q ? (
             <Caption>No chats match "{search}".</Caption>
           ) : (
-            <EmptyState pose="pecking" title="No chats yet" body="Start a chat with one person, or a group for the whole family." action={{ label: 'Start a chat', icon: 'chat', onPress: () => router.push('/chat/new') }} />
+            <EmptyState title="No chats yet" body="Start a chat with one person, or a group for the whole family." action={{ label: 'Start a chat', icon: 'chat', onPress: () => router.push('/chat/new') }} />
           )}
         </Stack>
       </Screen>

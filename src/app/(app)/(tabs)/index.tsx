@@ -67,7 +67,7 @@ export default function Home() {
                 <Stack gap={space.sm}>{upcoming.map((i) => <TaskRow key={i.id} item={i} tz={timezone} />)}</Stack>
               ) : (
                 <EmptyState
-                  pose="standing"
+                 
                   title="Nothing planned yet"
                   body={isParent ? 'When you ask for help or plan something, it will show up here.' : 'When your family asks for a hand, it will show up here.'}
                 />
