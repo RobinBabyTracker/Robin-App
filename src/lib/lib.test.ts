@@ -136,3 +136,13 @@ test('friendly errors', () => {
   assert.match(friendlyError({ message: 'Invalid login credentials' }), /don’t match/);
   assert.equal(friendlyError({ message: 'weird' }), 'Something went wrong. Please try again.');
 });
+
+test('the welcome tour shows only for new accounts that have not seen it', async () => {
+  const { guide } = await import('./guide.ts');
+  const now = Date.parse('2026-10-18T00:00:00Z');
+  const day = 24 * 60 * 60 * 1000;
+  assert.equal(guide.shouldShowTour({ id: 'a', created_at: new Date(now - day).toISOString() }, now), true);
+  assert.equal(guide.shouldShowTour({ id: 'b', created_at: new Date(now - 10 * day).toISOString() }, now), false, 'existing accounts skip it');
+  assert.equal(guide.shouldShowTour({ id: 'c', created_at: new Date(now - day).toISOString(), user_metadata: { tour_seen: true } }, now), false, 'seen on another phone');
+  assert.equal(guide.shouldShowTour({ id: 'd' }, now), false, 'unknown age: do not interrupt');
+});

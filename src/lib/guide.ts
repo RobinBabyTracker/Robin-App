@@ -18,8 +18,30 @@ function write(k: string, v: string | null) {
   }
 }
 
+// Only brand-new accounts get the tour automatically. Older accounts can still
+// watch it from You & family → How Robin works.
+const NEW_ACCOUNT_MS = 3 * 24 * 60 * 60 * 1000;
+
+type TourUser = { id: string; created_at?: string; user_metadata?: Record<string, unknown> };
+
 export const guide = {
   tourSeen: (userId: string) => read(key(userId, 'tour')) === '1',
+  /**
+   * Show the tour once per account: not if this phone has shown it, not if the
+   * account has seen it on another phone (saved with the account), and not to
+   * accounts that existed before the tour did.
+   */
+  shouldShowTour(user: TourUser, now = Date.now()): boolean {
+    if (guide.tourSeen(user.id)) return false;
+    const seenElsewhere = user.user_metadata?.tour_seen === true;
+    const created = user.created_at ? new Date(user.created_at).getTime() : NaN;
+    const isNew = Number.isFinite(created) && now - created < NEW_ACCOUNT_MS;
+    if (seenElsewhere || !isNew) {
+      guide.markTourSeen(user.id);
+      return false;
+    }
+    return true;
+  },
   markTourSeen: (userId: string) => write(key(userId, 'tour'), '1'),
 
   checklistHidden: (userId: string) => read(key(userId, 'hidden')) === '1',

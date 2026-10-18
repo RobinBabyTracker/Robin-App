@@ -17,7 +17,7 @@ const modal = {
 };
 
 export default function AppLayout() {
-  const { userId } = useAuth();
+  const { userId, session } = useAuth();
   const { familyId } = useFamily();
   useRealtime(userId, familyId);
 
@@ -25,8 +25,8 @@ export default function AppLayout() {
     const token = getPendingInvite();
     let tourTimer: ReturnType<typeof setTimeout> | undefined;
     if (token) router.push(`/invite/${token}`);
-    // First visit: Robin shows a short welcome tour once Home has appeared.
-    else if (userId && !guide.tourSeen(userId)) tourTimer = setTimeout(() => router.push('/tour'), 400);
+    // New accounts only: Robin shows a short welcome tour once Home has appeared.
+    else if (session?.user && guide.shouldShowTour(session.user)) tourTimer = setTimeout(() => router.push('/tour'), 400);
     // Push is optional; the in-app notification centre works without it.
     registerForPush().catch(() => {});
     // Tapping a push notification opens the right screen.

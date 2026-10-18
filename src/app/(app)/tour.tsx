@@ -6,6 +6,7 @@ import { Button, Caption, Label, Loading, Robin, Title, Voice } from '@/ui/compo
 import { useAuth } from '@/state/auth';
 import { useFamily } from '@/state/family';
 import { guide } from '@/lib/guide';
+import { supabase } from '@/lib/supabase';
 import { colors, radius, space } from '@/ui/theme';
 
 type Slide = { title: string; body: string; where?: string };
@@ -68,7 +69,12 @@ export default function Tour() {
   useEffect(() => { AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => {}); }, []);
 
   // Count the tour as seen as soon as it opens, so it never nags.
-  useEffect(() => { if (userId) guide.markTourSeen(userId); }, [userId]);
+  useEffect(() => {
+    if (!userId) return;
+    guide.markTourSeen(userId);
+    // Also remember it with the account, so a new phone doesn't show it again.
+    supabase.auth.updateUser({ data: { tour_seen: true } }).catch(() => {});
+  }, [userId]);
 
   if (loading) return <View style={{ flex: 1, backgroundColor: colors.background }}><Loading /></View>;
 
